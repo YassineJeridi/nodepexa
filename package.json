@@ -1,0 +1,23 @@
+{
+  "name": "nodepexa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YassineJeridi/nodepexa.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/YassineJeridi/nodepexa/issues"
+  },
+  "homepage": "https://github.com/YassineJeridi/nodepexa#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongoose": "^8.12.1"
+  }
+}
