@@ -1,23 +1,120 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // user CRUD
-router.post("/add", (req, res) => {
-  data = req.body;
-  usr = new User(data);
-  usr
-    .save()
-    .then((savedUser) => {
-      res.status(200).send(savedUser);
-    })
-    .catch((err) => {
-      res.status(400);
-      send(err);
-    });
 
-  console.log("user added");
+
+router.post('/register', async (req, res) => {
+  try {
+    const data = req.body;
+
+    
+    // Handle Anonymous Users
+    if (data.isAnonymous) {
+      // Validate anonymous user structure
+      if (Object.keys(data).some(key => !['userId', 'isAnonymous'].includes(key))) {
+        return res.status(400).send({ 
+          message: 'Anonymous users can only provide userId and isAnonymous' 
+        });
+      }
+
+      const anonymousUser = new User({
+        userId: data.userId,
+        isAnonymous: true
+      });
+
+      await anonymousUser.save();
+      return res.status(201).send(anonymousUser);
+    }
+    // Handle Registered Users
+    else {
+      // Validate required fields
+      const requiredFields = ['name', 'lastname', 'email', 'password', 'phone', 'address'];
+      const missingFields = requiredFields.filter(field => !data[field]);
+
+      if (missingFields.length > 0) {
+        return res.status(400).send({
+          message: `Missing required fields: ${missingFields.join(', ')}`
+        });
+      }
+
+      // Create registered user (password hashing handled in model middleware)
+      const newUser = new User({
+        userId: data.userId,
+        isAnonymous: false,
+        name: data.name,
+        lastname: data.lastname,
+        email: data.email,
+        password: data.password, // Will be hashed automatically
+        phone: data.phone,
+        address: data.address
+      });
+
+      await newUser.save();
+
+      // Remove password from response
+      const userResponse = newUser.toObject();
+      delete userResponse.password;
+      return res.status(201).send(userResponse);
+    }
+
+  } catch (error) {
+    console.error('Registration Error:', error);
+
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const duplicateField = Object.keys(error.keyPattern)[0];
+      return res.status(400).send({
+        message: `${duplicateField} already exists`
+      });
+    }
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).send({
+        message: Object.values(error.errors).map(e => e.message).join(', ')
+      });
+    }
+
+    // Generic error handler
+    res.status(500).send({ message: 'Server error during registration' });
+  }
 });
+
+
+router.post('/login',async(req,res)=>{
+    data = req.body;
+    user = await User.findOne({email:"yassinejeridi23@gmail.com"});
+    if(!user){
+        res.status(404).send("user not found");
+    }
+    else{
+        const valid = await bcrypt.compareSync(data.password,user.password);
+        if(!valid){
+            res.status(401).send("email or password invalid");
+        }
+        else{
+            payload = {
+                _id:user._id,
+                email:user.email,
+                name:user.name
+            }
+            token = jwt.sign(payload,'1234567')
+            res.status(200).send({mytoken : token});
+            
+        }
+    }
+})
+
+
+
+
+
+
+
 
 router.post("/create", async (req, res) => {
   try {

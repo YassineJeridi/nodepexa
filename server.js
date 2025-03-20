@@ -1,16 +1,17 @@
 const express = require("express");
-const Product = require("./models/product");
 require("./config/connect");
 
-const Productroute = require('./routes/product');
+const productroute = require('./routes/product');
 const userroute = require('./routes/user');
 const app = express();
 app.use(express.json());
 
 
-//http://127.0.0.1:3000/product/
+//http://127.0.0.1:3000/product/create 
 
-
+app.use('/product',productroute)
+app.use('/user',userroute)
+app.use('/getimage',express.static('./uploads'))
 
 
 
