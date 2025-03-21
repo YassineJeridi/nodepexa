@@ -11,55 +11,43 @@ router.post('/register', async (req, res) => {
   try {
     const data = req.body;
 
-    
     // Handle Anonymous Users
     if (data.isAnonymous) {
-      // Validate anonymous user structure
-      if (Object.keys(data).some(key => !['userId', 'isAnonymous'].includes(key))) {
-        return res.status(400).send({ 
-          message: 'Anonymous users can only provide userId and isAnonymous' 
-        });
-      }
-
       const anonymousUser = new User({
-        userId: data.userId,
         isAnonymous: true
       });
 
       await anonymousUser.save();
       return res.status(201).send(anonymousUser);
     }
+
     // Handle Registered Users
-    else {
-      // Validate required fields
-      const requiredFields = ['name', 'lastname', 'email', 'password', 'phone', 'address'];
-      const missingFields = requiredFields.filter(field => !data[field]);
+    const requiredFields = ['name', 'lastname', 'email', 'password', 'phone', 'address'];
+    const missingFields = requiredFields.filter(field => !data[field]);
 
-      if (missingFields.length > 0) {
-        return res.status(400).send({
-          message: `Missing required fields: ${missingFields.join(', ')}`
-        });
-      }
-
-      // Create registered user (password hashing handled in model middleware)
-      const newUser = new User({
-        userId: data.userId,
-        isAnonymous: false,
-        name: data.name,
-        lastname: data.lastname,
-        email: data.email,
-        password: data.password, // Will be hashed automatically
-        phone: data.phone,
-        address: data.address
+    if (missingFields.length > 0) {
+      return res.status(400).send({
+        message: `Missing required fields: ${missingFields.join(', ')}`
       });
-
-      await newUser.save();
-
-      // Remove password from response
-      const userResponse = newUser.toObject();
-      delete userResponse.password;
-      return res.status(201).send(userResponse);
     }
+
+    // Create registered user
+    const newUser = new User({
+      isAnonymous: false,
+      name: data.name,
+      lastname: data.lastname,
+      email: data.email,
+      password: data.password, // Will be hashed automatically
+      phone: data.phone,
+      address: data.address
+    });
+
+    await newUser.save();
+
+    // Remove password from response
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
+    return res.status(201).send(userResponse);
 
   } catch (error) {
     console.error('Registration Error:', error);
@@ -83,6 +71,27 @@ router.post('/register', async (req, res) => {
     res.status(500).send({ message: 'Server error during registration' });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 router.post('/login',async(req,res)=>{
