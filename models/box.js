@@ -1,13 +1,27 @@
-const donationSchema = new Schema({
-    donationId: { type: String, required: true, unique: true },
-    user: { type: Schema.Types.ObjectId, ref: 'User' },
-    price: { type: Number, required: true },
-    status: {
-      type: String,
-      enum: ['Pending', 'Completed', 'Cancelled'],
-      default: 'Pending'
+const Box = mongoose.model("Box", {
+  donation: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "Donation", 
+    required: true 
+  },
+  user: {    
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User", 
+    required: true 
+  },
+  items: [{
+    product: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Product", 
+      required: true 
     },
-    startDate: { type: Date, default: Date.now },
-    endDate: Date,
-    items: [{ type: Schema.Types.ObjectId, ref: 'Item' }]
-  });
+    quantity: { 
+      type: Number, 
+      required: true 
+    }
+  }],
+  region: { 
+    type: String, 
+    required: true 
+  }
+});

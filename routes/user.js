@@ -6,8 +6,7 @@ const jwt = require("jsonwebtoken");
 
 // user CRUD
 
-
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const data = req.body;
 
@@ -21,25 +20,28 @@ router.post('/register', async (req, res) => {
       return res.status(201).send(anonymousUser);
     }
 
-    // Handle Registered Users
-    const requiredFields = ['name', 'lastname', 'email', 'password', 'phone', 'address'];
+    // Required fields for non-anonymous users
+    const requiredFields = ["fullname", "email", "password", "phone", "address"];
     const missingFields = requiredFields.filter(field => !data[field]);
 
     if (missingFields.length > 0) {
-      return res.status(400).send({
-        message: `Missing required fields: ${missingFields.join(', ')}`
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(", ")}`
       });
     }
 
     // Create registered user
     const newUser = new User({
       isAnonymous: false,
-      name: data.name,
-      lastname: data.lastname,
+      fullname: data.fullname,
       email: data.email,
-      password: data.password, // Will be hashed automatically
+      password: data.password, // Will be hashed automatically in the schema
       phone: data.phone,
-      address: data.address
+      address: data.address,
+      upgradeStatus: data.upgradeStatus || false,
+      isVolunteer: data.isVolunteer || false,
+      badge: data.badge,
+      associationId: data.upgradeStatus ? data.associationId : undefined
     });
 
     await newUser.save();
@@ -47,28 +49,29 @@ router.post('/register', async (req, res) => {
     // Remove password from response
     const userResponse = newUser.toObject();
     delete userResponse.password;
-    return res.status(201).send(userResponse);
+
+    return res.status(201).json(userResponse);
 
   } catch (error) {
-    console.error('Registration Error:', error);
+    console.error("Registration Error:", error);
 
     // Handle duplicate key errors
     if (error.code === 11000) {
       const duplicateField = Object.keys(error.keyPattern)[0];
-      return res.status(400).send({
+      return res.status(400).json({
         message: `${duplicateField} already exists`
       });
     }
 
     // Handle validation errors
-    if (error.name === 'ValidationError') {
-      return res.status(400).send({
-        message: Object.values(error.errors).map(e => e.message).join(', ')
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        message: Object.values(error.errors).map(e => e.message).join(", ")
       });
     }
 
     // Generic error handler
-    res.status(500).send({ message: 'Server error during registration' });
+    return res.status(500).json({ message: "Server error during registration" });
   }
 });
 
@@ -78,65 +81,85 @@ router.post('/register', async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-router.post('/login',async(req,res)=>{
-    data = req.body;
-    user = await User.findOne({email:"yassinejeridi23@gmail.com"});
-    if(!user){
-        res.status(404).send("user not found");
-    }
-    else{
-        const valid = await bcrypt.compareSync(data.password,user.password);
-        if(!valid){
-            res.status(401).send("email or password invalid");
-        }
-        else{
-            payload = {
-                _id:user._id,
-                email:user.email,
-                name:user.name
-            }
-            token = jwt.sign(payload,'1234567')
-            res.status(200).send({mytoken : token});
-            
-        }
-    }
-})
-
-
-
-
-
-
-
-
-router.post("/create", async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
+    const { email, password } = req.body;
+
+    // Check if email and password are provided
+    if (!email || !password) {
+      return res.status(400).send({ message: "Email and password are required" });
+    } 
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    // Compare passwords
+    const valid = await bcrypt.compare(password, user.password);
+
+    if (!valid) {
+      return res.status(401).send({ message: "Invalid email or password" });
+    }
+
+    // Generate JWT token
+    const payload = {
+      _id: user._id,
+      email: user.email,
+      fullname: user.name
+    };
+
+    const token = jwt.sign(payload, "1234567", { expiresIn: "1h" });
+
+    res.status(200).send({ token });
+
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).send({ message: "Server error during login" });
+  }
+});
+
+
+/* 
+
+router.put("/update/:id", (req, res) => {
+  myid = req.params.id;
+  data = req.body;
+  User.findOneAndUpdate({ _id: myid }, data)
+    .then((updateduser) => {
+      res.send(updateduser);
+    })
+    .catch((err) => {
+      res.send(err);
+    });
+});
+*/
+
+
+router.put("/UpdateUser/:id", async (req, res) => {
+  try {
+    myid = req.params.id;
     data = req.body;
-    usr = new User(data);
-
-    savedUser = await usr.save();
-
-    res.send(savedUser);
+    update = await User.findByIdAndUpdate({ _id: myid }, data); 
+    res.send(update);
   } catch (error) {
     res.send(error);
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
 
 router.get("/getall", (req, res) => {
   User.find()
@@ -159,7 +182,7 @@ router.get("/all", async (req, res) => {
 
 router.get("/filter", async (req, res) => {
   try {
-    users = await User.find({ age: 21, name: "ela" });
+    users = await User.find({ age: 21, fullname: "ela" });
     res.send(users);
   } catch (error) {
     res.send(error);
@@ -208,27 +231,6 @@ router.delete("/delete2/:id", async (req, res) => {
   }
 });
 
-router.put("/update/:id", (req, res) => {
-  myid = req.params.id;
-  data = req.body;
-  User.findOneAndUpdate({ _id: myid }, data)
-    .then((updateduser) => {
-      res.send(updateduser);
-    })
-    .catch((err) => {
-      res.send(err);
-    });
-});
 
-router.put("/update2/:id", async (req, res) => {
-  try {
-    myid = req.params.id;
-    data = req.body;
-    update = await User.findByIdAndUpdate({ _id: myid }, data);
-    res.send(update);
-  } catch (error) {
-    res.send(error);
-  }
-});
 
 module.exports = router;
