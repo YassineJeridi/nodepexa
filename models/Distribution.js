@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const Distribution = mongoose.model("Distribution", {
   volunteer: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -17,3 +19,5 @@ const Distribution = mongoose.model("Distribution", {
     type: Date 
   }
 });
+
+module.exports = Distribution ;

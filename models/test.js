@@ -1,3 +1,6 @@
+const mongoose = require("mongoose");
+
+
 // User Model (For donation tracking)
 const User = mongoose.model("User", {
     isAnonymous: { type: Boolean, required: true }
@@ -29,3 +32,4 @@ const User = mongoose.model("User", {
       default: "enabled"
     }
   });
+  module.exports = { User, Donor, Volunteer };

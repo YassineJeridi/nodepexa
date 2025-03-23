@@ -1,3 +1,6 @@
+const mongoose = require("mongoose");
+
+
 const Ticket = mongoose.model("Ticket", {
   email: { 
     type: String, 
@@ -22,3 +25,4 @@ const Ticket = mongoose.model("Ticket", {
     required: true
   }
 });
+module.exports = Ticket ;

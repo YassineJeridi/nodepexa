@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const UserActivityLog = mongoose.model("UserActivityLog", {
   user: {  
     type: mongoose.Schema.Types.ObjectId, 
@@ -37,3 +39,6 @@ const UserActivityLog = mongoose.model("UserActivityLog", {
     default: Date.now 
   }
 });
+
+
+module.exports = UserActivityLog ;

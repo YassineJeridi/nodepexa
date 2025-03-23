@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const Association = mongoose.model("Association", {
   name: {
     type: String,
@@ -21,4 +23,4 @@ const Association = mongoose.model("Association", {
   }, // Store file path/URL
 });
 
- model.exports = Association;
+module.exports = Association;

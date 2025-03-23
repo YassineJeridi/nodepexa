@@ -1,4 +1,4 @@
-const { model } = require("mongoose");
+const mongoose = require("mongoose");
 
 const Admin = mongoose.model("Admin", {
     name: { 
@@ -12,5 +12,5 @@ const Admin = mongoose.model("Admin", {
     }
   });
 
-  model.exports = Admin ;
+  module.exports = Admin ;
   

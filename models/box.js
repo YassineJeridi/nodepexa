@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const Box = mongoose.model("Box", {
   donation: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -25,3 +27,5 @@ const Box = mongoose.model("Box", {
     required: true 
   }
 });
+
+module.exports = Box ;

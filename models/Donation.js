@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const Donation = mongoose.model("Donation", {
   box: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -26,3 +28,6 @@ const Donation = mongoose.model("Donation", {
     type: Date 
   },
 });
+
+
+module.exports = Donation ;
