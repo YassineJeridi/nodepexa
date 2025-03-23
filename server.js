@@ -3,6 +3,7 @@ require("./config/connect");
 
 const productroute = require('./routes/product');
 const userroute = require('./routes/user');
+const activityLogRoutes = require('./routes/ActivityLog');
 const app = express();
 app.use(express.json());
 
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use('/product',productroute)
 app.use('/user',userroute)
 app.use('/getimage',express.static('./uploads'))
+app.use('/ActivityLogs', activityLogRoutes)
 
 
 

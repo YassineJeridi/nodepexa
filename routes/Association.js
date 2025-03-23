@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const Association = require('../models/association');
+const Association = require('../models/Association');
 
 
 // Configure file storage for partnership documents
