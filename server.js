@@ -14,6 +14,7 @@ app.use('/product',productroute)
 app.use('/user',userroute)
 app.use('/getimage',express.static('./uploads'))
 app.use('/ActivityLogs', activityLogRoutes)
+app.use('/Association', require('./routes/Association'));
 
 
 

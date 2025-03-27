@@ -16,18 +16,14 @@ const User = mongoose.model('User', {
     type: String, 
     required: function() { 
       if ( this.role === 'donor' || this.role === 'volunteer' ) {
-
         return true;
-
     } 
   }},
   email: { 
     type: String, 
     required: function() { 
       if ( this.role === 'donor' || this.role === 'volunteer' ) {
-
         return true;
-
     }} ,
     unique: true 
   },
