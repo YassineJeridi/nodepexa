@@ -1,31 +1,46 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const Box = mongoose.model("Box", {
-  donation: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Donation", 
-    required: true 
-  },
-  user: {    
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "User", 
-    required: true 
-  },
-  items: [{
-    product: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "Product", 
-      required: true 
+const DonationBox = mongoose.model('DonationBox', {
+    // Donation Box fields
+    Items: [{
+        ProductID: {
+            type: String,
+            ref: 'Product',
+            required: true
+        },
+        quantity: {
+            type: Number,
+            required: true,
+            min: 1
+        }
+    }],
+    region: {
+        type: String,
     },
-    quantity: { 
-      type: Number, 
-      required: true 
+    Price: {
+        type: Number,
+        required: true
+    },
+    Status: {
+        type: String,
+        enum: ['collecting', 'Pending', 'Completed', 'Cancelled'],
+        default: 'collecting',
+        required: true
+    },
+    StartDate: {
+        type: Date,
+        default: Date.now,
+        required: true
+    },
+    EndDate: {
+        type: Date,
+    },
+    // Relationship with User
+    UserId: {
+        type: String,
+        ref: 'User',
+        required: true
     }
-  }],
-  region: { 
-    type: String, 
-    required: true 
-  }
 });
 
-module.exports = Box ;
+module.exports = DonationBox;

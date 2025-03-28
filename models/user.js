@@ -6,54 +6,44 @@ const User = mongoose.model('User', {
     type: Boolean, 
     default: false 
   },
-  role: { 
+  role: {
     type: String, 
     enum: ['donor', 'volunteer'], 
-    required: () => !this.isAnonymous 
+    required: true 
   },
+
   // Donor fields
   fullname: { 
     type: String, 
-    required: function() { 
-      if ( this.role === 'donor' || this.role === 'volunteer' ) {
-        return true;
-    } 
-  }},
+    required:  () => !this.isAnonymous 
+  },
   email: { 
     type: String, 
-    required: function() { 
-      if ( this.role === 'donor' || this.role === 'volunteer' ) {
-        return true;
-    }} ,
-    unique: true 
+    required:  () => !this.isAnonymous 
   },
   password: { 
     type: String, 
-    required: function() { 
-      if ( this.role === 'donor' || this.role === 'volunteer' ) {
-
-        return true;
-
-    }} ,
+    required:  () => !this.isAnonymous 
   },
   phone: {
     type : String,
-    required: function() { 
-      if ( this.role === 'donor' || this.role === 'volunteer' ) {
-
-        return true;
-
-      }
-    }
+    required:  () => !this.isAnonymous 
   },
-  address: String,
-  upgradeStatus: Boolean,
+  address: {
+    type :String,    
+    required:  () => !this.isAnonymous 
+  },
+  upgradeStatus: {
+    type:Boolean,
+    default: false,
+    required:  () => !this.isAnonymous},
+
   // Volunteer fields
   badge: { 
     type: String, 
     enum: ['Bronze', 'Silver', 'Gold'] ,
     required: function() { 
-      if ( this.role === 'volunteer' ) {
+      if ( this.role == 'volunteer' ) {
         return true;
       }
     }
@@ -69,7 +59,7 @@ const User = mongoose.model('User', {
   VolunteerStatus: { 
     type: String, 
     enum: ['enabled', 'disabled'], 
-    default: 'enabled' 
+    default: 'disabled' 
 
   }
 });

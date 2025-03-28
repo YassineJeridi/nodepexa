@@ -1,23 +1,29 @@
-const mongoose = require("mongoose");
+const Distribution = mongoose.model('Distribution', {
 
-const Distribution = mongoose.model("Distribution", {
-  volunteer: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Volunteer", 
-    required: true 
+  StartDate: {
+    type : Date,
+    default: Date.now,
+    required: true
+},
+  EndDate: Date,
+  Status: {
+      type: String,
+      enum: ['pending', 'associated', 'picked', 'distributed'],
+      default: 'pending',
+      required: true
   },
-  box: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "Box", 
-    required: true 
+  image : {
+    type: String,
+    required: () => this.Status === 'distributed'
   },
-  startDate: { 
-    type: Date, 
-    required: true 
+  // Relationships
+  VolunteerId: {
+      type: String,
+      ref: 'User'
   },
-  endDate: { 
-    type: Date 
+  DonationBoxId: {
+      type: String,
+      ref: 'DonationBox',
+      required: true
   }
 });
-
-module.exports = Distribution ;
