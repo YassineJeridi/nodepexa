@@ -1,22 +1,37 @@
 const express = require("express");
 require("./config/connect");
 
-const productroute = require('./routes/product');
-const userroute = require('./routes/user');
-const activityLogRoutes = require('./routes/ActivityLog');
+
+
+const ticketRoute = require('./routes/Ticket');
+const adminRoutes = require('./routes/admin');
+const activityLog = require('./routes/ActivityLog');
+const AssociationRoute = require('./routes/Association');
+const userRoute = require('./routes/User');
+const productRoute = require('./routes/Product');
+const DonationBox = require('./routes/DonationBox');
+const Distribution = require('./routes/Distribution');
+
+
+
 const app = express();
 app.use(express.json());
 
 
-//http://127.0.0.1:3000/product/create 
 
-app.use('/product',productroute)
-app.use('/user',userroute)
+app.use('/ticket', ticketRoute);
+app.use('/admin', adminRoutes);
+app.use('/ActivityLogs', activityLog);
+app.use('/Association', AssociationRoute);
+app.use('/user',userRoute);  
+app.use('/product',productRoute);
+app.use('/DonationBox', DonationBox);
+app.use('/Distribution', Distribution);
+
+
+
+
 app.use('/getimage',express.static('./uploads'))
-app.use('/ActivityLogs', activityLogRoutes)
-app.use('/Association', require('./routes/Association'));
-
-
 
 app.listen(3000, () => {
   console.log("server work");

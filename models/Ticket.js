@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 const Ticket = mongoose.model("Ticket", {
   email: { 
     type: String, 
@@ -8,7 +7,9 @@ const Ticket = mongoose.model("Ticket", {
   },
   message: { 
     type: String, 
-    required: true 
+    required: function() { 
+      return this.type === 'support'; // Required only for support tickets
+    } 
   },
   dateTime: { 
     type: Date, 
@@ -24,5 +25,6 @@ const Ticket = mongoose.model("Ticket", {
     enum: ["support", "newsletter"],
     required: true
   }
-});
-module.exports = Ticket ;
+}); // Fixed: Removed extra closing brace
+
+module.exports = Ticket;

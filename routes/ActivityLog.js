@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const UserActivityLog = require('../models/ActivityLog');
+const ActivityLog = require('../models/ActivityLog');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Association = require('../models/Association');
@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
     }
 
     // Create and save the log
-    const newLog = new UserActivityLog({
+    const newLog = new ActivityLog({
       user,
       association,
       admin,
@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
 // READ - Get all activity logs
 router.get('/', async (req, res) => {
   try {
-    const logs = await UserActivityLog.find()
+    const logs = await ActivityLog.find()
       .populate('user', 'fullname  email')
       .populate('association', 'name')
       .populate('admin', 'name');
@@ -70,7 +70,7 @@ router.get('/', async (req, res) => {
 // READ - Get a single activity log by ID
 router.get('/:id', async (req, res) => {
   try {
-    const log = await UserActivityLog.findById(req.params.id)
+    const log = await ActivityLog.findById(req.params.id)
       .populate('user', 'fullname email')
       .populate('association', 'name')
       .populate('admin', 'name');
@@ -106,7 +106,7 @@ router.get('/user/:userId', async (req, res) => {
     }
 
     // Fetch activity logs for the user
-    const logs = await UserActivityLog.find({ user: userId })
+    const logs = await ActivityLog.find({ user: userId })
       .populate('user', 'fullname email') // Populate user details
       .populate('association', 'name')    // Populate association details
       .populate('admin', 'name')          // Populate admin details
@@ -132,7 +132,7 @@ router.get('/user/:userId', async (req, res) => {
 // DELETE - Delete an activity log (optimized)
 router.delete('/:id', async (req, res) => {
   try {
-    const result = await UserActivityLog.deleteOne({ _id: req.params.id });
+    const result = await ActivityLog.deleteOne({ _id: req.params.id });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: 'Activity log not found' });

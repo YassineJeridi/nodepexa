@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const UserActivityLog = mongoose.model("UserActivityLog", {
+const ActivityLog = mongoose.model("UserActivityLog", {
   user: {  
     type: mongoose.Schema.Types.ObjectId, 
     ref: "User" 
@@ -41,4 +41,4 @@ const UserActivityLog = mongoose.model("UserActivityLog", {
 });
 
 
-module.exports = UserActivityLog ;
+module.exports = ActivityLog ;

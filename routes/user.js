@@ -232,5 +232,13 @@ router.delete("/delete2/:id", async (req, res) => {
 });
 
 
+router.get('/count', async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 module.exports = router;
