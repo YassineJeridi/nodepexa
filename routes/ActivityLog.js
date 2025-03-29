@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ActivityLog = require('../models/ActivityLog');
 const User = require('../models/User');
-const Admin = require('../models/Admin');
+const Admin = require('../models/CasaAdmin');
 const Association = require('../models/Association');
 
 

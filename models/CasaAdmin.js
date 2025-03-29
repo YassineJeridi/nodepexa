@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const Admin = mongoose.model("Admin", {
+const CasaAdmin = mongoose.model("CasaAdmin", {
     name: { 
         type: String, 
         required: true 
@@ -12,5 +12,5 @@ const Admin = mongoose.model("Admin", {
     }
   });
 
-  module.exports = Admin ;
+  module.exports = CasaAdmin ;
   

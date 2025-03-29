@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Distribution = mongoose.model('Distribution', {
 
   StartDate: {
@@ -27,3 +29,4 @@ const Distribution = mongoose.model('Distribution', {
       required: true
   }
 });
+module.exports = Distribution;

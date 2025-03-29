@@ -3,14 +3,16 @@ require("./config/connect");
 
 
 
-const ticketRoute = require('./routes/Ticket');
-const adminRoutes = require('./routes/admin');
-const activityLogRoute = require('./routes/ActivityLog');
-const AssociationRoute = require('./routes/Association');
 const userRoute = require('./routes/User');
 const productRoute = require('./routes/Product');
+const ticketRoute = require('./routes/Ticket');
+const AssociationRoute = require('./routes/Association');
+const ActivityLogRoute = require('./routes/ActivityLog');
+const CasaAdminRoute = require('./routes/CasaAdmin');
+const distributionRoute = require('./routes/Distribution');
 const DonationBoxRoute = require('./routes/DonationBox');
-const DistributionRoute = require('./routes/Distribution');
+
+
 
 
 
@@ -19,14 +21,16 @@ app.use(express.json());
 
 
 
-app.use('/ticket', ticketRoute);
-app.use('/admin', adminRoutes);
-app.use('/ActivityLogs', activityLogRoute);
-app.use('/Association', AssociationRoute);
 app.use('/user',userRoute);  
 app.use('/product',productRoute);
-app.use('/DonationBox', DonationBoxRoute);
-app.use('/Distribution', DistributionRoute);
+app.use('/ticket',ticketRoute);
+app.use('/association',AssociationRoute);
+app.use('/activitylog',ActivityLogRoute);
+app.use('/casaadmin',CasaAdminRoute);
+app.use('/distribution',distributionRoute);
+app.use('/donationbox',DonationBoxRoute);
+
+
 
 
 
