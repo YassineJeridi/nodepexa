@@ -1,26 +1,40 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-const Association = mongoose.model("Association", {
-  name: {
-    type: String,
-    required: true,
+const Association = mongoose.model('Association', {
+  AssociationID: { 
+    type: String, 
+    required: true, 
+    unique: true 
   },
-  description: { 
+  name: { 
     type: String, 
     required: true 
   },
-  location: { 
+  password: { 
     type: String, 
     required: true 
+  }, // Will be hashed
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true 
   },
-  partnershipDate: { 
+  Description: String,
+  Location: String,
+  PartnershipDate: { 
     type: Date, 
-    required: true 
+    default: Date.now 
   },
-  partnershipDoc: { 
-    type: String, 
-    required: true 
-  }, // Store file path/URL
+  partnershipDoc: String // File path/URL
+});
+
+// Add password hashing middleware
+Association.schema.pre('save', async function(next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
 });
 
 module.exports = Association;
