@@ -18,7 +18,7 @@ const Product = mongoose.model("Product", {
     required: true 
   },
   image: {
-    type: String, 
+    type: String,  // Path to the image file
     required: true
   }
 });

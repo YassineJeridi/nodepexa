@@ -1,21 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const Ticket = require('../models/Ticket');
-
+const User = require('../models/User'); // Add this line
 // CREATE Ticket
 
 router.post('/', async (req, res) => {
   try {
     const { email, message, type, user } = req.body;
     
-    // Updated validation
+    // Basic validation
     if (!email || !type) {
       return res.status(400).json({ message: 'Email and type are required' });
     }
 
-    // Additional check for support tickets
+    // Support ticket validation
     if (type === 'support' && !message) {
       return res.status(400).json({ message: 'Message is required for support tickets' });
+    }
+
+    // Validate user exists if provided
+    if (user) {
+      const userExists = await User.findById(user);
+      if (!userExists) {
+        return res.status(400).json({ message: 'User not found' });
+      }
     }
 
     const newTicket = new Ticket({
@@ -28,7 +36,6 @@ router.post('/', async (req, res) => {
     const savedTicket = await newTicket.save();
     res.status(201).json(savedTicket);
   } catch (err) {
-    // Handle validation errors
     if (err.name === 'ValidationError') {
       return res.status(400).json({ 
         message: err.message.replace('Ticket validation failed: ', '') 
@@ -58,7 +65,30 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET Single Ticket by ID
+
+
+
+router.get('/type/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+    
+    if (!['support', 'newsletter'].includes(type)) {
+      return res.status(400).json({ message: 'Invalid ticket type' });
+    }
+
+    const tickets = await Ticket.find({ type })
+      .sort({ dateTime: -1 })
+      .populate('user', 'username email');
+
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+
 router.get('/:id', async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id)
@@ -67,6 +97,7 @@ router.get('/:id', async (req, res) => {
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
+
     res.json(ticket);
   } catch (err) {
     if (err.name === 'CastError') {
@@ -76,25 +107,51 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// DELETE Ticket
-router.delete('/:id', async (req, res) => {
-  try {
-    const deletedTicket = await Ticket.findByIdAndDelete(req.params.id);
 
-    if (!deletedTicket) {
-      return res.status(404).json({ message: 'Ticket not found' });
+
+
+
+router.get('/user/:userId', async (req, res) => {
+  try {
+    // Verify user exists first
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({ 
-      message: 'Ticket deleted successfully',
-      deletedTicket
-    });
+    const tickets = await Ticket.find({ user: req.params.userId })
+      .sort({ dateTime: -1 })
+      .populate('user', 'username email');
+
+    res.json(tickets);
   } catch (err) {
     if (err.name === 'CastError') {
-      return res.status(400).json({ message: 'Invalid ticket ID' });
+      return res.status(400).json({ message: 'Invalid user ID' });
     }
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+
+
+
+
+
+router.get('/username/:username', async (req, res) => {
+  try {
+    // Find user by username
+    const user = await User.findOne({ fullname: req.params.fullname });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const tickets = await Ticket.find({ user: user._id })
+      .sort({ dateTime: -1 })
+      .populate('user', 'username email');
+
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 module.exports = router;

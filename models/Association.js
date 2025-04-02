@@ -1,12 +1,7 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
 
 const Association = mongoose.model('Association', {
-  AssociationID: { 
-    type: String, 
-    required: true, 
-    unique: true 
-  },
+  // _id: mongoose.Schema.Types.ObjectId, // Optional, MongoDB will generate an ID if not provided
   name: { 
     type: String, 
     required: true 
@@ -26,15 +21,13 @@ const Association = mongoose.model('Association', {
     type: Date, 
     default: Date.now 
   },
-  partnershipDoc: String // File path/URL
+  partnershipDoc: String, // File path/URL
+  status: { 
+    type: String, 
+    enum: ['enabled', 'disabled'],  
+    default: 'active' 
+  },
 });
 
-// Add password hashing middleware
-Association.schema.pre('save', async function(next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-  next();
-});
 
 module.exports = Association;
