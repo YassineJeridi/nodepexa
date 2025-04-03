@@ -8,40 +8,61 @@ const User = mongoose.model('User', {
   },
   role: {
     type: String, 
-    enum: ['donor', 'volunteer'], 
+    enum: ['anonymous', 'donor', 'volunteer'],  // Added 'anonymous' here
     required: true 
   },
-
-  // Donor fields
+  
+  // Make all donor fields conditionally required
   fullname: { 
     type: String, 
-    required:  () => !this.isAnonymous 
+    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } 
   },
   email: { 
     type: String, 
-    required:  () => !this.isAnonymous 
+    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } ,
+    unique: true
   },
   password: { 
     type: String, 
-    required:  () => !this.isAnonymous 
+    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; }   
   },
   phone: {
-    type : String,
-    required:  () => !this.isAnonymous 
+    type: String,
+    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } 
   },
   address: {
-    type :String,    
-    required:  () => !this.isAnonymous 
+    type: String,    
+    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } 
   },
+  joinDate: {
+    type: Date,
+    default: Date.now,
+    required: true },
   upgradeStatus: {
-    type:Boolean,
-    default: false,
-    required:  () => !this.isAnonymous},
+    type: String,
+    enum: ['enabled', 'disabled'],
+    default: function() { 
+      if (this.role === 'donor' || this.role === 'volunteer') {
+        return 'disabled';
+      }
+    },
+    required:  function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } 
+  },
+  UserStatus: {
+    type: String,
+    enum: ['enabled', 'disabled'],
+    default: function() { 
+      if (this.role === 'donor' || this.role === 'volunteer') {
+        return 'enabled';
+      }
+    },
+    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; }
+  },
 
   // Volunteer fields
   badge: { 
     type: String, 
-    enum: ['Bronze', 'Silver', 'Gold'] ,
+    enum: ['no badge yet','Bronze', 'Silver', 'Gold'] ,
     required: function() { 
       if ( this.role == 'volunteer' ) {
         return true;
@@ -59,7 +80,12 @@ const User = mongoose.model('User', {
   VolunteerStatus: { 
     type: String, 
     enum: ['enabled', 'disabled'], 
-    default: 'disabled' 
+    default: function() { 
+      if (this.role === 'donor') {
+        return 'disabled';
+      }
+    } ,
+    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; }
 
   }
 });
