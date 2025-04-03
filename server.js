@@ -1,6 +1,7 @@
 const express = require("express");
 require("./config/connect");
-require('dotenv').config()
+require('dotenv').config();
+const authMiddleware = require('./middlewares/authMiddleware');
 
 
 const userRoute = require('./routes/User');
@@ -11,14 +12,11 @@ const ActivityLogRoute = require('./routes/ActivityLog');
 const CasaAdminRoute = require('./routes/CasaAdmin');
 const distributionRoute = require('./routes/Distribution');
 const DonationBoxRoute = require('./routes/DonationBox');
-
-
-
+const authenticationRoute = require('./routes/auth');
 
 
 const app = express();
 app.use(express.json());
-
 
 
 app.use('/user',userRoute);  
@@ -29,13 +27,9 @@ app.use('/activitylog',ActivityLogRoute);
 app.use('/casaadmin',CasaAdminRoute);
 app.use('/distribution',distributionRoute);
 app.use('/donationbox',DonationBoxRoute);
+app.use('/auth',authenticationRoute);
+app.use('/user', authMiddleware, userRoute);
 
-
-
-
-
-
-app.use('/getimage',express.static('./uploads'))
 
 app.listen(3000, () => {
   console.log("server work");

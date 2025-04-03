@@ -62,7 +62,7 @@ const User = mongoose.model('User', {
   // Volunteer fields
   badge: { 
     type: String, 
-    enum: ['no badge yet','Bronze', 'Silver', 'Gold'] ,
+    enum: ['no badge yet','bronze', 'silver', 'gold'] ,
     required: function() { 
       if ( this.role == 'volunteer' ) {
         return true;
@@ -71,9 +71,8 @@ const User = mongoose.model('User', {
   },
   association: { 
     type: mongoose.Types.ObjectId, 
-    ref: 'Association' ,
+    ref: 'Association', 
     required: function() { 
-
         return  this.upgradeStatus === true; 
     }
   },
@@ -90,19 +89,24 @@ const User = mongoose.model('User', {
   }
 });
 
-// Password hashing
-User.schema.pre('save', async function(next) {
+
+const userSchema = User.schema;
+
+// Add pre-save hook
+userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
+  
   try {
-    this.password = await bcrypt.hash(this.password, 10);
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (err) {
     next(err);
   }
 });
 
-// Password comparison
-User.schema.methods.comparePassword = function(candidatePassword) {
+// Add compare method
+User.prototype.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
