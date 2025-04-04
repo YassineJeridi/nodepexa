@@ -3,6 +3,13 @@ require("./config/connect");
 require('dotenv').config();
 const authMiddleware = require('./middlewares/authMiddleware');
 
+const isAdmin = require('./middlewares/isAdmin');
+const isAssociation = require('./middlewares/isAssociation');
+const adminDashboardRoute = require('./routes/adminDashboard'); // Add this line
+const associationDashboardRoute = require('./routes/associationDashboard'); // Add this line
+
+
+
 
 const userRoute = require('./routes/User');
 const productRoute = require('./routes/Product');
@@ -29,6 +36,11 @@ app.use('/distribution',distributionRoute);
 app.use('/donationbox',DonationBoxRoute);
 app.use('/auth',authenticationRoute);
 app.use('/user', authMiddleware, userRoute);
+
+
+
+app.use('/admin/dashboard', authMiddleware, isAdmin, adminDashboardRoute);
+app.use('/association/dashboard', authMiddleware, isAssociation, associationDashboardRoute);
 
 
 app.listen(3000, () => {

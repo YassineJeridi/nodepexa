@@ -1,100 +1,95 @@
 const mongoose = require("mongoose");
 const bcrypt = require('bcrypt');
 
-const User = mongoose.model('User', {
+const userSchema = new mongoose.Schema({
   isAnonymous: { 
     type: Boolean, 
     default: false 
   },
   role: {
     type: String, 
-    enum: ['anonymous', 'donor', 'volunteer'],  // Added 'anonymous' here
+    enum: ['anonymous', 'donor', 'volunteer'],
     required: true 
   },
-  
-  // Make all donor fields conditionally required
   fullname: { 
     type: String, 
-    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } 
+    required: function() { 
+      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+    } 
   },
   email: { 
     type: String, 
-    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } ,
+    required: function() { 
+      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+    },
     unique: true
   },
   password: { 
     type: String, 
-    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; }   
+    required: function() { 
+      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+    }   
   },
   phone: {
     type: String,
-    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } 
+    required: function() { 
+      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+    } 
   },
   address: {
     type: String,    
-    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } 
+    required: function() { 
+      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+    } 
   },
   joinDate: {
     type: Date,
     default: Date.now,
-    required: true },
+    required: true
+  },
   upgradeStatus: {
     type: String,
     enum: ['enabled', 'disabled'],
-    default: function() { 
-      if (this.role === 'donor' || this.role === 'volunteer') {
-        return 'disabled';
-      }
-    },
-    required:  function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; } 
+    default: 'disabled',
+    required: function() { 
+      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+    } 
   },
   UserStatus: {
     type: String,
     enum: ['enabled', 'disabled'],
-    default: function() { 
-      if (this.role === 'donor' || this.role === 'volunteer') {
-        return 'enabled';
-      }
-    },
-    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; }
+    default: 'enabled',
+    required: function() { 
+      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+    }
   },
-
-  // Volunteer fields
   badge: { 
     type: String, 
-    enum: ['no badge yet','bronze', 'silver', 'gold'] ,
+    enum: ['no badge yet', 'bronze', 'silver', 'gold'],
     required: function() { 
-      if ( this.role == 'volunteer' ) {
-        return true;
-      }
+      return this.role === 'volunteer';
     }
   },
   association: { 
-    type: mongoose.Types.ObjectId, 
+    type: mongoose.Schema.Types.ObjectId, 
     ref: 'Association', 
     required: function() { 
-        return  this.upgradeStatus === true; 
+      return this.upgradeStatus === 'enabled';
     }
   },
   VolunteerStatus: { 
     type: String, 
     enum: ['enabled', 'disabled'], 
-    default: function() { 
-      if (this.role === 'donor') {
-        return 'disabled';
-      }
-    } ,
-    required: function() { return !this.isAnonymous && (this.role === 'donor' || this.role === 'volunteer' ) ; }
-
+    default: 'disabled',
+    required: function() { 
+      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+    }
   }
 });
 
-
-const userSchema = User.schema;
-
-// Add pre-save hook
+// Password hashing middleware
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || this.isAnonymous) return next();
   
   try {
     const salt = await bcrypt.genSalt(10);
@@ -105,9 +100,20 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Add compare method
-User.prototype.comparePassword = async function(candidatePassword) {
+// Password comparison method
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (this.isAnonymous) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
+
+// Remove password from JSON output
+userSchema.set('toJSON', {
+  transform: function(doc, ret) {
+    delete ret.password;
+    return ret;
+  }
+});
+
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;

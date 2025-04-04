@@ -47,51 +47,6 @@ const verifyPasskeyData = (req, res, next) => {
 
 
 
-
-
-
-// 1. Middleware to verify passkey for login route
-router.post('/login', async (req, res) => {
-  try {
-    const { name, password } = req.body;
-
-    // Validate input
-    if (!name || !password) {
-      return res.status(400).json({ error: 'Name and password are required' });
-    }
-
-    // Find admin and explicitly select password
-    const admin = await CasaAdmin.findOne({ name }).select('+password');
-    if (!admin) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // Compare passwords
-    const isMatch = await admin.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // Return admin data (password will be hidden by toJSON)
-    res.json({
-      message: 'Login successful',
-      admin: admin.toJSON()
-    });
-
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-
-
-
-
-
-
-
 // 2. Create Admin (Protected)
 router.post('/create', verifyPasskeyAdd, async (req, res) => {
   try {

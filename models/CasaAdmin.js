@@ -1,10 +1,13 @@
+// models/CasaAdmin.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-const CasaAdmin = mongoose.model('CasaAdmin', {
+// 1. Define Schema
+const casaAdminSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
+    unique: true // ⚠️ Ensure admin names are unique
   },
   password: {
     type: String,
@@ -13,23 +16,41 @@ const CasaAdmin = mongoose.model('CasaAdmin', {
   joiningDate: {
     type: Date,
     default: Date.now,
-    immutable: true
+    immutable: true // Prevent modification after creation
+  },
+  isSuperAdmin: { // ⚠️ Optional: For tiered admin access
+    type: Boolean,
+    default: false
   }
 });
 
+// 2. Password Hashing (pre-save hook)
+casaAdminSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
-// Add password comparison method
-CasaAdmin.prototype.comparePassword = async function(candidatePassword) {
+// 3. Password Comparison Method
+casaAdminSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-
-// Remove password from JSON output
-CasaAdmin.schema.set('toJSON', {
+// 4. Remove Password from JSON Output
+casaAdminSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.password;
     return ret;
   }
 });
+
+// 5. Create Model
+const CasaAdmin = mongoose.model('CasaAdmin', casaAdminSchema);
 
 module.exports = CasaAdmin;

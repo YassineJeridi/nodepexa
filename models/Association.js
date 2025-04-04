@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-const Association = mongoose.model('Association', {
-  // _id: mongoose.Schema.Types.ObjectId, // Optional, MongoDB will generate an ID if not provided
+const associationSchema = new mongoose.Schema({
   name: { 
     type: String, 
     required: true 
@@ -9,7 +9,7 @@ const Association = mongoose.model('Association', {
   password: { 
     type: String, 
     required: true 
-  }, // Will be hashed
+  },
   email: { 
     type: String, 
     required: true, 
@@ -29,5 +29,25 @@ const Association = mongoose.model('Association', {
   },
 });
 
+// Hash password before saving
+associationSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
 
-module.exports = Association;
+// Password comparison method
+associationSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Remove password from JSON output
+associationSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.password;
+    return ret;
+  }
+});
+
+module.exports = mongoose.model('Association', associationSchema);

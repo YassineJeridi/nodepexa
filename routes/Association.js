@@ -2,8 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const upload = require('../uploads/upload'); // Import the upload config
-const fs = require('fs');
 const Association = require('../models/Association'); // Adjust path as needed
 const checkApiKey = (req, res, next) => {
 
@@ -14,83 +12,6 @@ const apiKey = req.headers['x-api-key'];
   }
   next();
 };
-
-
-
-
-
-
-// Login route
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const association = await Association.findOne({ email, status: 'disabled' });
-    if (association) {
-      return res.status(401).json({ error : "association disabled" });
-    }
-    else{
-      const association = await Association.findOne({ email, status: 'enabled' });
-      console.log(association);
-      if (!association) {
-        return res.status(401).json({ error: 'Invalid credentials or account disabled' });
-      }
-  
-      const isMatch = await bcrypt.compare(password, association.password);
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-  
-      // Remove password before sending response
-      const associationObj = association.toObject();
-      delete associationObj.password;
-  
-      res.json({ message: 'Login successful', association: associationObj });
-    }
-    }
-
- catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-
-
-
-
-// Create association
-router.post('/', upload.single('partnershipDoc'), async (req, res) => {
-  try {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    
-    const associationData = {
-      ...req.body,
-      password: hashedPassword
-    };
-
-    // Add file path if file was uploaded
-    if (req.file) {
-      associationData.partnershipDoc = req.file.path;
-    }
-
-    const association = new Association(associationData);
-    await association.save();
-    
-    const associationObj = association.toObject();
-    delete associationObj.password;
-
-    res.status(201).json(associationObj);
-  } catch (error) {
-    // Clean up uploaded file if error occurred
-    if (req.file) {
-      fs.unlink(req.file.path, () => {});
-    }
-    
-    if (error.code === 11000) {
-      return res.status(400).json({ error: 'Duplicate field value' });
-    }
-    res.status(400).json({ error: error.message });
-  }
-});
 
 
 
