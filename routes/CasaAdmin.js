@@ -2,41 +2,18 @@ const express = require('express');
 const router = express.Router();
 const CasaAdmin = require('../models/CasaAdmin');
 const bcrypt = require('bcrypt');
-const PASS_KEY1 = "pexaui the best add"; // Your secret passkey for create
-const PASS_KEY2 = "pexaui the best update"; // Your secret passkey for update
-const PASS_KEY3 = "pexaui the best delete"; // Your secret passkey for delete
-const PASS_KEY4 = "pexaui the best Data"; // Your secret passkey for data
+
+
 
 
 // Middleware to verify passkey
-const verifyPasskeyAdd = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey || apiKey !== PASS_KEY1) {
+const verifyPasskey = (req, res, next) => {
+  const apiKey = req.headers['passkey'];
+  if (!apiKey || apiKey !== process.env.PASS_KEY) {
+    console.error('Invalid or missing passkey:', apiKey);
     return res.status(401).json({ error: 'Invalid or missing passkey' });
   }
-  next();
-};
-const verifyPasskeyUpdate = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey || apiKey !== PASS_KEY2) {
-    return res.status(401).json({ error: 'Invalid or missing passkey' });
-  }
-  next();
-};
 
-const verifyPasskeyDelete = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey || apiKey !== PASS_KEY3) {
-    return res.status(401).json({ error: 'Invalid or missing passkey' });
-  }
-  next();
-};
-
-const verifyPasskeyData = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey || apiKey !== PASS_KEY4) {
-    return res.status(401).json({ error: 'Invalid or missing passkey' });
-  }
   next();
 };
 
@@ -44,54 +21,7 @@ const verifyPasskeyData = (req, res, next) => {
 
 
 
-
-
-
-// 2. Create Admin (Protected)
-router.post('/create', verifyPasskeyAdd, async (req, res) => {
-  try {
-    const { name, password } = req.body;
-
-    // Validate input
-    if (!name || !password) {
-      return res.status(400).json({ error: 'Name and password are required' });
-    }
-
-    // Check if admin already exists
-    const existingAdmin = await CasaAdmin.findOne({ name });
-    if (existingAdmin) {
-      return res.status(409).json({ error: 'Admin already exists' });
-    }
-
-    // Hash the password manually
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create and save the admin
-    const newAdmin = new CasaAdmin({
-      name,
-      password: hashedPassword // Store the hashed version
-    });
-
-    await newAdmin.save();
-
-    // Return admin without password (due to toJSON transform)
-    res.status(201).json(newAdmin);
-
-  } catch (error) {
-    console.error('Error creating admin:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-
-
-
-
-
-
-router.put('/:id', verifyPasskeyUpdate, async (req, res) => {
+router.put('/:id', verifyPasskey, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, password } = req.body;
@@ -130,7 +60,7 @@ router.put('/:id', verifyPasskeyUpdate, async (req, res) => {
 
 
 // 4. Delete Admin (Protected)
-router.delete('/:id', verifyPasskeyDelete, async (req, res) => {
+router.delete('/:id', verifyPasskey, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -152,7 +82,7 @@ router.delete('/:id', verifyPasskeyDelete, async (req, res) => {
 
 
 // 5. List All Admins (Protected)
-router.get('/', verifyPasskeyData , async (req, res) => {
+router.get('/', verifyPasskey , async (req, res) => {
   try {
     const admins = await CasaAdmin.find().sort({ joiningDate: -1 });
     res.json(admins);
@@ -168,7 +98,7 @@ router.get('/', verifyPasskeyData , async (req, res) => {
 
 
 // 6. Get Admin by ID (Protected)
-router.get('/:id', verifyPasskeyData, async (req, res) => {
+router.get('/:id', verifyPasskey, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -190,7 +120,7 @@ router.get('/:id', verifyPasskeyData, async (req, res) => {
 
 
 // 7. Get Admin by Name (Protected)
-router.get('/name/:name', verifyPasskeyData, async (req, res) => {
+router.get('/name/:name', verifyPasskey, async (req, res) => {
   try {
     const { name } = req.params;
 

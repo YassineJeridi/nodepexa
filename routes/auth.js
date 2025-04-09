@@ -10,13 +10,12 @@ const fs = require('fs');
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = "JWT_CASA";
 
 
 
 
 // User Login
-router.post("/login", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -33,7 +32,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
@@ -194,17 +193,28 @@ router.post("/registerAssociation", upload.single("partnershipDoc"), async (req,
 
 
 
-router.post('/adminLogin', async (req, res) => {
+router.post('/AdminLogin', async (req, res) => {
   try {
     const { name, password } = req.body;
-    const admin = await CasaAdmin.findOne({ name }).select('+password');
-
-    if (!admin) return res.status(401).json({ error: "Invalid credentials" });
     
-    const isMatch = await admin.comparePassword(password);
-    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
+    // Case-insensitive search
+    const admin = await CasaAdmin.findOne({ 
+      name: { $regex: new RegExp(`^${name}$`, 'i') }
+    }).select('+password');
 
-    // Generate token
+    if (!admin) {
+      console.log(`Admin not found: ${name}`);
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    console.log(`Found admin: ${admin.name}`);
+    const isMatch = await admin.comparePassword(password);
+    
+    if (!isMatch) {
+      console.log(`Password mismatch for admin: ${admin.name}`);
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
     const token = jwt.sign(
       { adminId: admin._id, role: 'admin' },
       process.env.JWT_SECRET,
@@ -217,13 +227,47 @@ router.post('/adminLogin', async (req, res) => {
       token
     });
   } catch (error) {
+    console.error('Admin login error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
 
 
+// Middleware to verify passkey
+const verifyPasskey = (req, res, next) => {
+  const apiKey = req.headers['passkey'];
+  if (!apiKey || apiKey !== process.env.Admin_Create_PASS_KEY) {  
+    console.error('Invalid or missing passkey:', apiKey);
+    return res.status(401).json({ error: 'Invalid or missing passkey' });
+  }
 
+  next();
+};
+
+
+
+router.post('/CreateAdmin', verifyPasskey, async (req, res) => {
+  try {
+    const { name, password } = req.body;
+    // Validate input
+    if (!name || !password) {
+      return res.status(400).json({ error: 'Name and password are required' });
+    }
+    // Check if admin exists
+    const existingAdmin = await CasaAdmin.findOne({ name });
+    if (existingAdmin) {
+      return res.status(409).json({ error: 'Admin already exists' });
+    }
+    // Create admin with plaintext password
+    const newAdmin = new CasaAdmin({ name, password }); // Model will auto-hash
+    await newAdmin.save();
+    res.status(201).json(newAdmin);
+  } catch (error) {
+    console.error('Error creating admin:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 
 

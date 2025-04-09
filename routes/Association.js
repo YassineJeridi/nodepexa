@@ -7,7 +7,7 @@ const checkApiKey = (req, res, next) => {
 
 
 const apiKey = req.headers['x-api-key'];
-  if (apiKey !== 'pexaui the best update status') {
+  if (apiKey !== process.env.JWT_SECRET) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   next();

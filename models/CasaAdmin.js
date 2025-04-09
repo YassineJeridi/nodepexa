@@ -18,10 +18,6 @@ const casaAdminSchema = new mongoose.Schema({
     default: Date.now,
     immutable: true // Prevent modification after creation
   },
-  isSuperAdmin: { // ⚠️ Optional: For tiered admin access
-    type: Boolean,
-    default: false
-  }
 });
 
 // 2. Password Hashing (pre-save hook)

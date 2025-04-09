@@ -25,6 +25,7 @@ const Ticket = mongoose.model("Ticket", {
     enum: ["support", "newsletter"],
     required: true
   }
-}); // Fixed: Removed extra closing brace
+});
+
 
 module.exports = Ticket;

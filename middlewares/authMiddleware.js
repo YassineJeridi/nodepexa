@@ -1,4 +1,7 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User'); // Add this
+const Association = require('../models/Association'); // Add this
+const CasaAdmin = require('../models/CasaAdmin'); // Add this
 
 module.exports = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];

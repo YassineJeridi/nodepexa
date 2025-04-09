@@ -3,12 +3,11 @@ const router = express.Router();
 const User = require("../models/User");
 const Association = require("../models/Association");
 const bcrypt = require("bcrypt");
-const API_KEY="disable_Key";
 
 // Middleware for API key authentication
 const apiKeyMiddleware = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  if (apiKey && apiKey === API_KEY) {
+  const apiKey = req.headers['passkey'];
+  if (apiKey && apiKey === process.env.PASS_KEY) {
     next();
   } else {
     res.status(401).json({ message: "Unauthorized - Invalid API Key" });
