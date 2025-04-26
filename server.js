@@ -1,68 +1,48 @@
+// server.js
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
-require("./config/database");
+const database = require("./config/database"); // Import database connection
+const authRoutes = require("./routes/auth");
+const associationRoutes = require("./routes/Association");
+const donationBoxRoutes = require("./routes/DonationBox");
+const productRoutes = require("./routes/Product");
+const ticketRoutes = require("./routes/Ticket");
+const userRoutes = require("./routes/User");
+const statsRoutes = require("./routes/stats");
 
-// Middlewares
-const authMiddleware = require("./middlewares/authMiddleware");
-const isAdmin = require("./middlewares/isAdmin");
-
-
-// Routes
-const userRoute = require("./routes/User");
-const productRoute = require("./routes/Product");
-const ticketRoute = require("./routes/Ticket");
-const AssociationRoute = require("./routes/Association");
-const ActivityLogRoute = require("./routes/ActivityLog");
-const CasaAdminRoute = require("./routes/CasaAdmin");
-const distributionRoute = require("./routes/Distribution");
-const DonationBoxRoute = require("./routes/DonationBox");
-const authenticationRoute = require("./routes/auth");
-const adminDashboardRoute = require("./routes/adminDashboard");
-
-// Initialize Express app
-
-
-//test
 const app = express();
 
-// CORS Configuration
 const corsOptions = {
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  origin: ["http://localhost:5173", "http://localhost:3000"], // Add your frontend URLs here
+  credentials: true,
 };
+
 app.use(cors(corsOptions));
-
-// Middleware
 app.use(express.json());
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/associations", associationRoutes);
+app.use("/api/donationBoxes", donationBoxRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/tickets", ticketRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api", statsRoutes);
+app.use("/uploads", express.static("uploads"));
 
-// Route Definitions
-const routes = [
-  { path: "/auth", route: authenticationRoute },
-  { path: "/user", route: userRoute, middleware: [authMiddleware] },
-  { path: "/product", route: productRoute },
-  { path: "/ticket", route: ticketRoute },
-  { path: "/association", route: AssociationRoute },
-  { path: "/activitylog", route: ActivityLogRoute },
-  { path: "/distribution", route: distributionRoute },
-  { path: "/donationbox", route: DonationBoxRoute },
-  { path: "/casaadmin", route: CasaAdminRoute },
-  { 
-    path: "/admin/dashboard", 
-    route: adminDashboardRoute, 
-    middleware: [authMiddleware, isAdmin] 
-  }
-];
-
-// Register Routes
-routes.forEach(({ path, route, middleware = [] }) => {
-  app.use(path, ...middleware, route);
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal server error" });
 });
 
-// Server Configuration
+// 404 Handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Endpoint not found" });
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Database: ${process.env.MONGO_URI}`);
 });

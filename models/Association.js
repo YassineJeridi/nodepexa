@@ -1,53 +1,38 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const associationSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true 
+  name: {
+    type: String,
+    required: true,
   },
-  password: { 
-    type: String, 
-    required: true 
+  password: {
+    type: String,
+    required: true,
   },
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true 
+  email: {
+    type: String,
+    unique: true,
+    required: true,
   },
-  Description: String,
-  Location: String,
-  PartnershipDate: { 
-    type: Date, 
-    default: Date.now 
+  description: String,
+  location: String,
+  partnershipDate: {
+    type: Date,
+    default: Date.now, // Auto-set partnership date
   },
-  partnershipDoc: String, // File path/URL
-  status: { 
-    type: String, 
-    enum: ['enabled', 'disabled'],  
-    default: 'active' 
-  },
+  partnershipDoc: String,
 });
 
-// Hash password before saving
-associationSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+// Password hashing for associations
+associationSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// Password comparison method
-associationSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+associationSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Remove password from JSON output
-associationSchema.set('toJSON', {
-  transform: (doc, ret) => {
-    delete ret.password;
-    return ret;
-  }
-});
-
-module.exports = mongoose.model('Association', associationSchema);
+module.exports = mongoose.model("Association", associationSchema);

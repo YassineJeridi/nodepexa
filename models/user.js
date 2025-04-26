@@ -1,119 +1,114 @@
 const mongoose = require("mongoose");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema({
-  isAnonymous: { 
-    type: Boolean, 
-    default: false 
-  },
   role: {
-    type: String, 
-    enum: ['anonymous', 'donor', 'volunteer'],
-    required: true 
+    type: String,
+    enum: ["Anonymous", "Donor", "Volunteer", "Admin"],
+    required: true,
   },
-  fullname: { 
-    type: String, 
-    required: function() { 
-      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
-    } 
-  },
-  email: { 
-    type: String, 
-    required: function() { 
-      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
+  fullName: {
+    type: String,
+    required: function () {
+      return this.role !== "Anonymous";
     },
-    unique: true
   },
-  password: { 
-    type: String, 
-    required: function() { 
-      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
-    }   
+  email: {
+    type: String,
+    unique: true,
+    required: function () {
+      return this.role !== "Anonymous" && this.role !== "Admin";
+    },
+    sparse: true,
+  },
+  password: {
+    type: String,
+    required: function () {
+      return this.role !== "Anonymous";
+    },
   },
   phone: {
     type: String,
-    required: function() { 
-      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
-    } 
+    required: function () {
+      return this.role !== "Anonymous" && this.role !== "Admin";
+    },
+    unique: true,
   },
+
   address: {
-    type: String,    
-    required: function() { 
-      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
-    } 
+    type: String,
+    required: function () {
+      return this.role !== "Anonymous" && this.role !== "Admin";
+    },
   },
   joinDate: {
     type: Date,
     default: Date.now,
-    required: true
+    required: true,
   },
-  upgradeStatus: {
+  rewardPoints: {
+    type: Number,
+    min: 0,
+    required: function () {
+      return this.role !== "Anonymous" && this.role !== "Admin";
+    },
+    default: 0,
+  },
+
+  volunteerRequest: {
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+    },
+    requestedAssociation: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Association",
+      required: function () {
+        return this.volunteerRequest?.status === "pending";
+      },
+    },
+  },
+
+  volunteerStatus: {
     type: String,
-    enum: ['enabled', 'disabled'],
-    default: 'disabled',
-    required: function() { 
-      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
-    } 
+    enum: ["enabled", "disabled"],
+    required: function () {
+      return this.role === "Volunteer";
+    },
   },
-  UserStatus: {
+
+  badge: {
     type: String,
-    enum: ['enabled', 'disabled'],
-    default: 'enabled',
-    required: function() { 
-      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
-    }
+    enum: ["Iron", "Bronze", "Silver", "Gold"],
+    required: function () {
+      return this.role === "Volunteer";
+    },
   },
-  badge: { 
-    type: String, 
-    enum: ['no badge yet', 'bronze', 'silver', 'gold'],
-    required: function() { 
-      return this.role === 'volunteer';
-    }
+  associatedAssociation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Association",
+    required: function () {
+      return this.role === "Volunteer";
+    },
   },
-  association: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Association', 
-    required: function() { 
-      return this.upgradeStatus === 'enabled';
-    }
-  },
-  VolunteerStatus: { 
-    type: String, 
-    enum: ['enabled', 'disabled'], 
-    default: 'disabled',
-    required: function() { 
-      return !this.isAnonymous && ['donor', 'volunteer'].includes(this.role);
-    }
-  }
 });
 
 // Password hashing middleware
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password') || this.isAnonymous) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
+userSchema.pre("save", async function (next) {
+  // Handle password hashing
+  if (this.role !== "Anonymous" && this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
+
+  if (this.role === "Anonymous" || this.role === "Admin") {
+    this.rewardPoints = undefined; // Remove password for anonymous users
   }
 });
 
 // Password comparison method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  if (this.isAnonymous) return false;
-  return bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Remove password from JSON output
-userSchema.set('toJSON', {
-  transform: function(doc, ret) {
-    delete ret.password;
-    return ret;
-  }
-});
-
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+module.exports = mongoose.model("User", userSchema);
