@@ -66,21 +66,33 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
 
-    if (!user || !(await user.matchPassword(password))) {
+    // 1. Find user
+    const user = await User.findOne({ email });
+    if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    // 2. Check password
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-    res.json({ token, role: user.role }); // Add role to the response
+    // 3. Generate token
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // 4. Send response
+    res.json({
+      token,
+      userId: user._id,
+      role: user.role, // Include role if needed for frontend
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 };
 

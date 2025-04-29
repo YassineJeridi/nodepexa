@@ -1,4 +1,4 @@
-// server.js
+// server.j
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -9,13 +9,16 @@ const donationBoxRoutes = require("./routes/DonationBox");
 const productRoutes = require("./routes/Product");
 const ticketRoutes = require("./routes/Ticket");
 const userRoutes = require("./routes/User");
+
 const statsRoutes = require("./routes/stats");
 
 const app = express();
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:3000"], // Add your frontend URLs here
+  origin: ["http://localhost:5173", "http://localhost:3000"],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
