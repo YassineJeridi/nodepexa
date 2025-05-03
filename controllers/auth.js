@@ -5,24 +5,10 @@ const fs = require("fs");
 
 exports.register = async (req, res) => {
   try {
-    let userData = req.body;
+    const userData = req.body;
 
-    if (userData.role == "Admin") {
-      const existingAdmin = await User.findOne({
-        role: "Admin",
-        fullName: userData.fullName,
-      });
-
-      if (existingAdmin) {
-        return res
-          .status(400)
-          .json({ message: "An Admin with this full name already exists." });
-      }
-    }
-
-    if (userData.role === "Anonymous") {
-      userData = { role: "Anonymous" };
-    } else if (
+    // Validate volunteer request (if applicable)
+    if (
       userData.role === "Donor" &&
       userData.volunteerRequest?.requestedAssociation
     ) {
@@ -37,12 +23,13 @@ exports.register = async (req, res) => {
       }
     }
 
+    // Email check
     const existingEmail = await User.findOne({ email: userData.email });
     if (existingEmail) {
       return res.status(400).json({ message: "Email already exists." });
     }
 
-    // Check if phone number already exists
+    // Phone check
     const existingPhone = await User.findOne({ phone: userData.phone });
     if (existingPhone) {
       return res.status(400).json({ message: "Phone number already exists." });
@@ -53,15 +40,61 @@ exports.register = async (req, res) => {
   } catch (error) {
     if (error.code === 11000) {
       const duplicateField = Object.keys(error.keyValue)[0];
-      const message = `${
-        duplicateField.charAt(0).toUpperCase() + duplicateField.slice(1)
-      } already exists.`;
+      const message =
+        duplicateField.charAt(0).toUpperCase() +
+        duplicateField.slice(1) +
+        " already exists.";
       return res.status(400).json({ message });
     }
 
     res.status(400).json({ error: error.message });
   }
 };
+
+/********************************************************************************/
+exports.registerAnonymous = async (req, res) => {
+  try {
+    const user = await User.create({ role: "Anonymous" });
+    res.status(201).json(user);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+/********************************************************************************/
+
+exports.registerAdmin = async (req, res) => {
+  try {
+    const userData = req.body;
+
+    const existingAdmin = await User.findOne({
+      role: "Admin",
+      fullName: userData.fullName,
+    });
+
+    if (existingAdmin) {
+      return res.status(400).json({
+        message: "An Admin with this full name already exists.",
+      });
+    }
+
+    const user = await User.create(userData);
+    res.status(201).json(user);
+  } catch (error) {
+    if (error.code === 11000) {
+      const duplicateField = Object.keys(error.keyValue)[0];
+      const message =
+        duplicateField.charAt(0).toUpperCase() +
+        duplicateField.slice(1) +
+        " already exists.";
+      return res.status(400).json({ message });
+    }
+
+    res.status(400).json({ error: error.message });
+  }
+};
+
+/********************************************************************************/
 
 exports.login = async (req, res) => {
   try {
@@ -96,39 +129,64 @@ exports.login = async (req, res) => {
   }
 };
 
+/********************************************************************************/
+
+exports.verifyAdmin = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ isValid: false, message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.role !== "Admin") {
+      return res
+        .status(403)
+        .json({ isValid: false, message: "Not authorized as admin" });
+    }
+
+    return res.status(200).json({ isValid: true }); // ✅ This is the key
+  } catch (error) {
+    console.error("Token verification error:", error);
+    return res.status(401).json({ isValid: false, message: "Invalid token" });
+  }
+};
+
+/********************************************************************************/
+
 exports.adminLogin = async (req, res) => {
-  const { fullName, password } = req.body;
-  const user = await User.findOne({ role: "Admin", fullName });
+  try {
+    const { fullName, password } = req.body;
 
-  if (!user || !(await user.matchPassword(password))) {
-    return res.status(401).json({ error: "Invalid Admin credentials" });
+    if (!fullName || !password) {
+      return res
+        .status(400)
+        .json({ error: "Full name and password are required" });
+    }
+
+    const user = await User.findOne({ fullName, role: "Admin" });
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ error: "Invalid Admin credentials" });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    return res.status(200).json({ token });
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({ error: "Server error" });
   }
-
-  const token = jwt.sign(
-    { userId: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  res.json({ token });
 };
 
-exports.associationLogin = async (req, res) => {
-  const { email, password } = req.body;
-  const association = await Association.findOne({ email });
-
-  if (!association || !(await association.matchPassword(password))) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
-
-  const token = jwt.sign(
-    { id: association._id, type: "Association" },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  res.json({ token });
-};
+/********************************************************************************/
 
 exports.createAssociation = async (req, res) => {
   try {
@@ -153,5 +211,77 @@ exports.createAssociation = async (req, res) => {
     }
 
     res.status(400).json({ error: error.message });
+  }
+};
+
+exports.associationLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const association = await Association.findOne({ email });
+
+    if (!association || !(await association.matchPassword(password))) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { userId: association._id, role: "Association" },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      association: {
+        id: association._id,
+        name: association.name,
+        email: association.email,
+      },
+    });
+  } catch (error) {
+    console.error("Association login error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+/********************************************************************************/
+
+exports.associationLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const association = await Association.findOne({ email });
+
+    if (!association || !(await association.matchPassword(password))) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { userId: association._id, role: "Association" },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      association: {
+        id: association._id,
+        name: association.name,
+        email: association.email,
+      },
+    });
+  } catch (error) {
+    console.error("Association login error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 };

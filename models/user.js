@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
       return this.role !== "Anonymous" && this.role !== "Admin";
     },
     unique: true,
+    sparse: true,
   },
 
   address: {
