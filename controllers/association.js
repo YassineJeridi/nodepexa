@@ -18,7 +18,7 @@ exports.getAssociationById = async (req, res) => {
     const association = await Association.findById(req.params.id);
     if (!association)
       return res.status(404).json({ error: "Association not found" });
-    res.json(association);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+    res.json(association);                                             
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }

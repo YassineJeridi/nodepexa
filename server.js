@@ -9,6 +9,7 @@ const donationBoxRoutes = require("./routes/DonationBox");
 const productRoutes = require("./routes/Product");
 const ticketRoutes = require("./routes/Ticket");
 const userRoutes = require("./routes/User");
+const dashboardRouter = require("./routes/AdminDashboardRouter");
 
 const statsRoutes = require("./routes/stats");
 
@@ -32,7 +33,7 @@ app.use("/api/tickets", ticketRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api", statsRoutes);
 app.use("/uploads", express.static("uploads"));
-
+app.use("/api/admin/dashboard", dashboardRouter);
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
