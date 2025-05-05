@@ -87,9 +87,8 @@ exports.RecentDonations = async (req, res) => {
         { "timeTrack.Distributed": { $exists: true } },
       ],
     })
-      .sort({ "timeTrack.creation": -1 })
-      .limit(5)
-      .select("timeTrack creation donor items region price boxStatus")
+      .sort({ "timeTrack.creation": -1 }) // ✅ Sort by most recent creation
+      .limit(20) // ✅ Changed from 5 to 20
       .populate("donor", "fullName")
       .populate("items.product", "name");
 
@@ -99,7 +98,9 @@ exports.RecentDonations = async (req, res) => {
           (status) => box.timeTrack[status]
         );
         return {
-          date: box.timeTrack[statusDate].toISOString(),
+          date:
+            box.timeTrack[statusDate]?.toISOString() ||
+            box.timeTrack.creation.toISOString(),
           userId: box.donor?.fullName || "Anonymous",
           boxes: box._id,
           region: box.region || "N/A",
@@ -113,7 +114,8 @@ exports.RecentDonations = async (req, res) => {
       })
     );
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch recent donations" });
+    console.error("Recent donations fetch error:", error);
+    return res.status(500).json({ error: "Failed to fetch recent donations" });
   }
 };
 
