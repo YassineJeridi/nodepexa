@@ -9,7 +9,7 @@ const donationBoxSchema = new mongoose.Schema({
   ],
   region: {
     type: String,
-},
+  },
   price: {
     type: Number,
     required: true,
@@ -18,16 +18,26 @@ const donationBoxSchema = new mongoose.Schema({
 
   boxStatus: {
     type: String,
-    enum: ["Collecting", "Completed", "Cancelled", "Picked", "Distributed"],
+    enum: ["Collecting", "Checkout", "Cancelled", "Picked", "Distributed"],
   },
   timeTrack: {
-    creation: {
+    Collecting: {
       type: Date,
       default: Date.now,
     },
-    checkout: Date,
-    picking: Date,
-    close: Date,
+    Checkout: {
+      type: Date,
+    },
+
+    Cancelled: {
+      type: Date,
+    },
+    Picked: {
+      type: Date,
+    },
+    Distributed: {
+      type: Date,
+    },
   },
   image: String,
   donor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

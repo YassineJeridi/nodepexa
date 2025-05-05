@@ -70,7 +70,7 @@ exports.updateStatus = async (req, res) => {
     const { status, volunteer } = req.body;
     const validStatuses = [
       "Collecting",
-      "Completed",
+      "Checkout",
       "Cancelled",
       "Picked",
       "Distributed",
@@ -85,14 +85,14 @@ exports.updateStatus = async (req, res) => {
       return res.status(404).json({ error: "Donation box not found" });
     }
 
-    // Check for region before setting status to Completed
-    if (status === "Completed" && !donationBox.region) {
+    // Region check before setting Checkout
+    if (status === "Checkout" && !donationBox.region) {
       return res.status(400).json({
-        error: "Region must be selected before marking as Completed",
+        error: "Region must be selected before marking as Checkout",
       });
     }
 
-    // Check for volunteer when setting status to Picked
+    // Volunteer check before setting Picked
     if (status === "Picked") {
       if (!volunteer) {
         return res.status(400).json({ error: "Volunteer is required" });
@@ -105,13 +105,15 @@ exports.updateStatus = async (req, res) => {
           .json({ error: "Volunteer not found or invalid role" });
       }
 
-      // Assign volunteer to the box
+      // Assign volunteer
       donationBox.volunteer = volunteer;
     }
 
-    // Update status and time tracking
+    // ✅ Update status
     donationBox.boxStatus = status;
-    donationBox.timeTrack[status.toLowerCase()] = Date.now();
+
+    // ✅ Set the corresponding timestamp in timeTrack
+    donationBox.timeTrack[status] = new Date();
 
     await donationBox.save();
     res.json(donationBox);

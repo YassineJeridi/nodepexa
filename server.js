@@ -1,4 +1,4 @@
-// server.j
+// server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -34,6 +34,7 @@ app.use("/api/users", userRoutes);
 app.use("/api", statsRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/admin/dashboard", dashboardRouter);
+
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
