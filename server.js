@@ -9,7 +9,7 @@ const donationBoxRoutes = require("./routes/DonationBox");
 const productRoutes = require("./routes/Product");
 const ticketRoutes = require("./routes/Ticket");
 const userRoutes = require("./routes/User");
-const dashboardRouter = require("./routes/AdminDashboardRouter");
+const dashboardRouter = require("./routes/adminDashboard/AdminDashboardRouter");
 
 const statsRoutes = require("./routes/stats");
 

@@ -82,32 +82,35 @@ exports.RecentDonations = async (req, res) => {
     const recent = await DonationBox.find({
       boxStatus: { $in: ["Checkout", "Picked", "Distributed"] },
       $or: [
-        { "timeTrack.Checkout": { $exists: true } },
-        { "timeTrack.Picked": { $exists: true } },
-        { "timeTrack.Distributed": { $exists: true } },
+        { "timeTrack.Checkout": { $exists: true, $ne: null } },
+        { "timeTrack.Picked": { $exists: true, $ne: null } },
+        { "timeTrack.Distributed": { $exists: true, $ne: null } },
       ],
     })
-      .sort({ "timeTrack.creation": -1 }) // ✅ Sort by most recent creation
-      .limit(20) // ✅ Changed from 5 to 20
+      .sort({ "timeTrack.creation": -1 })
+      .limit(20)
       .populate("donor", "fullName")
       .populate("items.product", "name");
 
     res.json(
       recent.map((box) => {
         const statusDate = ["Checkout", "Picked", "Distributed"].find(
-          (status) => box.timeTrack[status]
+          (status) => box.timeTrack?.[status] instanceof Date
         );
+
         return {
-          date:
-            box.timeTrack[statusDate]?.toISOString() ||
-            box.timeTrack.creation.toISOString(),
+          _id: box._id,
+          boxStatus: box.boxStatus,
+          date: statusDate
+            ? box.timeTrack?.[statusDate]?.toISOString()
+            : box.timeTrack?.creation?.toISOString() ||
+              new Date().toISOString(),
           userId: box.donor?.fullName || "Anonymous",
-          boxes: box._id,
           region: box.region || "N/A",
           price: box.price || 0,
-          content: box.items.map((item) => ({
+          items: box.items.map((item) => ({
             name: item.product?.name || "Unknown",
-            quantity: item.quantity,
+            quantity: item.quantity || 0,
           })),
           status: box.boxStatus,
         };
@@ -127,13 +130,14 @@ exports.RecentUsers = async (req, res) => {
     })
       .sort({ joinDate: -1 })
       .limit(20)
-      .select("fullName email role joinDate");
+      .select("fullName email role phone joinDate");
 
     res.json(
       users.map((user) => ({
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        phone: user.phone,
         date: user.joinDate.toISOString(),
       }))
     );
@@ -193,7 +197,7 @@ exports.NewUsers = async (req, res) => {
   try {
     const count = await User.countDocuments({
       role: { $in: ["Donor", "Volunteer"] },
-      joinDate: { $gte: getTodayDate() },
+      joinDate: { $gte: getTodayDate()},
     });
     res.json({ totalUsers: count });
   } catch (error) {

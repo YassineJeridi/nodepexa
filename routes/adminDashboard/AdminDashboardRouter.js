@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const MainDashboard = require("../controllers/AdminDashboard/MainDashboard");
+const MainDashboard = require("../../controllers/AdminDashboard/MainDashboard");
 
-// ✅ Define all routes
-router.get("/chart-data", MainDashboard.DonationChart); // ✅ Chart endpoint
+router.get("/chart-data", MainDashboard.DonationChart);
 router.get("/recent-donations", MainDashboard.RecentDonations);
 router.get("/today-donations", MainDashboard.TodayDonations);
 router.get("/new-users", MainDashboard.NewUsers);
