@@ -103,8 +103,6 @@ exports.getLatestUsers = async (req, res) => {
       associatedAssociation: user.associatedAssociation?.name || "N/A",
     }));
 
-    // ✅ Log final output
-    console.log("User Data:", userData);
     res.json(userData);
   } catch (error) {
     console.error("User list fetch error:", error);
