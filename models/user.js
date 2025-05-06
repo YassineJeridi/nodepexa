@@ -92,6 +92,11 @@ const userSchema = new mongoose.Schema({
       return this.role === "Volunteer";
     },
   },
+  userStatus: {
+    type: String,
+    enum: ["enabled", "disabled"],
+    default: "enabled",
+  },
 });
 
 // Password hashing middleware

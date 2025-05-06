@@ -81,6 +81,7 @@ exports.RecentDonations = async (req, res) => {
   try {
     const recent = await DonationBox.find({
       boxStatus: { $in: ["Checkout", "Picked", "Distributed"] },
+      donor: { $exists: true }, // ✅ Ensure donor is defined
       $or: [
         { "timeTrack.Checkout": { $exists: true, $ne: null } },
         { "timeTrack.Picked": { $exists: true, $ne: null } },
@@ -89,7 +90,7 @@ exports.RecentDonations = async (req, res) => {
     })
       .sort({ "timeTrack.creation": -1 })
       .limit(20)
-      .populate("donor", "fullName")
+      .populate("donor", "fullName role") // ✅ Populate donor's fullName and role
       .populate("items.product", "name");
 
     res.json(
@@ -99,20 +100,19 @@ exports.RecentDonations = async (req, res) => {
         );
 
         return {
-          _id: box._id,
+          boxId: box._id, // ✅ Use boxId instead of _id
           boxStatus: box.boxStatus,
           date: statusDate
             ? box.timeTrack?.[statusDate]?.toISOString()
             : box.timeTrack?.creation?.toISOString() ||
               new Date().toISOString(),
-          userId: box.donor?.fullName || "Anonymous",
+          userId: box.donor?.fullName || "Anonymous", // ✅ Correct donor name
           region: box.region || "N/A",
           price: box.price || 0,
           items: box.items.map((item) => ({
             name: item.product?.name || "Unknown",
             quantity: item.quantity || 0,
           })),
-          status: box.boxStatus,
         };
       })
     );
@@ -197,7 +197,7 @@ exports.NewUsers = async (req, res) => {
   try {
     const count = await User.countDocuments({
       role: { $in: ["Donor", "Volunteer"] },
-      joinDate: { $gte: getTodayDate()},
+      joinDate: { $gte: getTodayDate() },
     });
     res.json({ totalUsers: count });
   } catch (error) {
