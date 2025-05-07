@@ -56,26 +56,14 @@ const userSchema = new mongoose.Schema({
     default: 0,
   },
 
-  volunteerRequest: {
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-    },
+
     requestedAssociation: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Association",
       required: function () {
         return this.volunteerRequest?.status === "pending";
       },
-    },
-  },
 
-  volunteerStatus: {
-    type: String,
-    enum: ["enabled", "disabled"],
-    required: function () {
-      return this.role === "Volunteer";
-    },
   },
 
   badge: {
