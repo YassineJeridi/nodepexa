@@ -7,13 +7,13 @@ exports.register = async (req, res) => {
   try {
     const userData = req.body;
 
-    // Validate volunteer request (if applicable)
+    // Validate donor request to become a volunteer (if applicable)
     if (
       userData.role === "Donor" &&
-      userData.volunteerRequest?.requestedAssociation
+      userData.requestedAssociation
     ) {
       const associationExists = await Association.exists({
-        _id: userData.volunteerRequest.requestedAssociation,
+        _id: userData.requestedAssociation,
       });
 
       if (!associationExists) {

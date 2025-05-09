@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const {
-  requestVolunteer,
   getAllUsers,
   getUserByPhone,
   updateUser,
@@ -10,7 +9,7 @@ const {
 
 router.get("/", getAllUsers);
 router.get("/phone/:phone", getUserByPhone);
-router.patch("/:id", updateUser);
+router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 
 module.exports = router;
