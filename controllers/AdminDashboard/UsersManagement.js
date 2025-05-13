@@ -66,22 +66,10 @@ exports.getLatestUsers = async (req, res) => {
       )
       .populate("associatedAssociation", "name");
 
-    // ✅ Log users to verify data
-    console.log(
-      "Fetched Users:",
-      users.map((u) => u.toObject())
-    );
-
     const donations = await DonationBox.find({
       boxStatus: { $in: ["Checkout", "Picked", "Distributed"] },
       donor: { $exists: true },
     }).select("donor price");
-
-    // ✅ Log donations to verify mapping
-    console.log(
-      "Donations:",
-      donations.map((d) => d.toObject())
-    );
 
     const donationsByUser = donations.reduce((acc, d) => {
       acc[d.donor.toString()] = (acc[d.donor.toString()] || 0) + d.price;

@@ -64,7 +64,26 @@ exports.getProductById = async (req, res) => {
 // Update product
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    const { name, description, price, quantity } = req.body;
+
+    // ✅ Validate required fields
+    if (!name || !description || !price || !quantity) {
+      return res
+        .status(400)
+        .json({
+          error: "All fields including image are required for PUT updates",
+        });
+    }
+    const updateData = {
+      name,
+      description,
+      price: parseFloat(price),
+      quantity: parseInt(quantity),
+    };
+    if (req.file) {
+      updateData.image = req.file.path;
+    }
+    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -74,7 +93,6 @@ exports.updateProduct = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
 
 
 exports.deleteProduct = async (req, res) => {

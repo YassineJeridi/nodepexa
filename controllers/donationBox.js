@@ -243,9 +243,52 @@ exports.getAllDonationBoxes = async (req, res) => {
   try {
     const boxes = await DonationBox.find()
       .populate("donor")
-      .populate("items.product");
+      .populate("volunteer")
+      .populate("items.product")
+      .select("boxStatus price region volunteer donor items timeTrack");
     res.json(boxes);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getDonationChartData = async (req, res) => {
+  try {
+    // ✅ Find boxes where "Checkout" status is set
+    const boxes = await DonationBox.find({
+      "timeTrack.Checkout": { $exists: true },
+    }).select("price timeTrack.Checkout");
+
+    // ✅ Group donations by date and sum price
+    const grouped = boxes.reduce((acc, box) => {
+      const date = new Date(box.timeTrack.Checkout).toISOString().split("T")[0];
+      acc[date] = (acc[date] || 0) + box.price;
+      return acc;
+    }, {});
+
+    // ✅ Convert to chart-ready format
+    const chartData = Object.entries(grouped).map(([date, donations]) => ({
+      date,
+      donations,
+    }));
+
+    res.json(chartData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteDonationBox = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedBox = await DonationBox.findByIdAndDelete(id);
+
+    if (!deletedBox) {
+      return res.status(404).json({ message: "Donation box not found" });
+    }
+
+    res.status(200).json({ message: "Donation box deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
