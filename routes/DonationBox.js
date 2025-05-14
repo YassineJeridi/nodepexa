@@ -11,19 +11,24 @@ const {
   getDonationBoxById,
   getAllDonationBoxes,
   getDonationChartData,
-  deleteDonationBox,
+  removeVolunteer,
+
+  assignVolunteer,
 } = require("../controllers/donationBox");
 
 // Routes
 router.post("/", createDonationBox);
 router.patch("/region/:id", addRegion);
 router.post("/items/:id", addItem);
-router.delete("/:id", deleteDonationBox);
+
 router.delete("/items/:id", removeItem);
 router.patch("/items/:id", changeQuantity);
 router.patch("/status/:id", updateStatus);
 router.get("/", getAllDonationBoxes);
 router.get("/chart", getDonationChartData);
 router.get("/:id", getDonationBoxById);
+router.patch("/:id/volunteer", assignVolunteer);
+router.patch("/removeVolunteer/:id", removeVolunteer);
+
 
 module.exports = router;

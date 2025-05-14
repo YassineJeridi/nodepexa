@@ -15,6 +15,15 @@ const associationSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
+  phone: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+
+  address: {
+    type: String,
+  },
   description: String,
   location: String,
   partnershipDate: {

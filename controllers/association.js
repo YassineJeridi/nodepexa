@@ -1,7 +1,7 @@
 const Association = require("../models/Association");
-const fs = require('fs');
-const path = require('path');
 
+const fs = require("fs");
+const path = require("path");
 
 exports.getAssociations = async (req, res) => {
   try {
@@ -13,17 +13,18 @@ exports.getAssociations = async (req, res) => {
 };
 
 // Get association by ID
+
 exports.getAssociationById = async (req, res) => {
   try {
     const association = await Association.findById(req.params.id);
-    if (!association)
-      return res.status(404).json({ error: "Association not found" });
-    res.json(association);                                             
+    if (!association) {
+      return res.status(404).json({ message: "Association not found" });
+    }
+    res.json(association);
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Failed to fetch association" });
   }
 };
-
 // Update association
 exports.updateAssociation = async (req, res) => {
   try {
@@ -42,7 +43,6 @@ exports.updateAssociation = async (req, res) => {
 
 // Delete association
 
-
 exports.deleteAssociation = async (req, res) => {
   try {
     // 1. Delete association from database
@@ -55,7 +55,7 @@ exports.deleteAssociation = async (req, res) => {
       const originalPath = association.partnershipDoc;
       const ext = path.extname(originalPath);
       const baseName = path.basename(originalPath, ext);
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
       const newFileName = `deleted_${association.name}_${date}${ext}`;
       const newPath = path.join(path.dirname(originalPath), newFileName);
 
@@ -63,12 +63,12 @@ exports.deleteAssociation = async (req, res) => {
       fs.renameSync(originalPath, newPath);
     }
 
-    res.json({ 
+    res.json({
       message: "Association deleted successfully",
-      renamedDoc: association.partnershipDoc ? newPath : null
+      renamedDoc: association.partnershipDoc ? newPath : null,
     });
   } catch (error) {
-    console.error('Delete error:', error);
+    console.error("Delete error:", error);
     res.status(500).json({ error: "Server error" });
   }
 };

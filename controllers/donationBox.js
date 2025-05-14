@@ -1,5 +1,6 @@
 const DonationBox = require("../models/DonationBox");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 
 exports.createDonationBox = async (req, res) => {
@@ -54,71 +55,51 @@ exports.createDonationBox = async (req, res) => {
 exports.addRegion = async (req, res) => {
   try {
     const { region } = req.body;
+    if (!region || region.trim() === "") {
+      return res.status(400).json({ error: "Region cannot be empty" });
+    }
+
     const updatedBox = await DonationBox.findByIdAndUpdate(
       req.params.id,
       { region },
       { new: true }
     );
+    if (!updatedBox)
+      return res.status(404).json({ error: "Donation box not found" });
     res.json(updatedBox);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Region update failed:", error.message);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
-exports.updateStatus = async (req, res) => {
+exports.assignVolunteer = async (req, res) => {
   try {
-    const { status, volunteer } = req.body;
-    const validStatuses = [
-      "Collecting",
-      "Checkout",
-      "Cancelled",
-      "Picked",
-      "Distributed",
-    ];
+    const { volunteerId } = req.body;
+    const box = await DonationBox.findById(req.params.id);
+    if (!box) return res.status(404).json({ error: "Donation box not found" });
 
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+    // ✅ Validate volunteer ID
+    if (!mongoose.Types.ObjectId.isValid(volunteerId)) {
+      return res.status(400).json({ error: "Invalid volunteer ID" });
     }
 
-    const donationBox = await DonationBox.findById(req.params.id);
-    if (!donationBox) {
-      return res.status(404).json({ error: "Donation box not found" });
-    }
+    const testRole = await User.exists({ _id: volunteerId, role: "Volunteer" });
+    if (!testRole)
+      return res
+        .status(400)
+        .json({ error: "Selected user is not a volunteer" });
 
-    // Region check before setting Checkout
-    if (status === "Checkout" && !donationBox.region) {
-      return res.status(400).json({
-        error: "Region must be selected before marking as Checkout",
-      });
-    }
+    // ✅ Assign volunteer
 
-    // Volunteer check before setting Picked
-    if (status === "Picked") {
-      if (!volunteer) {
-        return res.status(400).json({ error: "Volunteer is required" });
-      }
-
-      const user = await User.findById(volunteer);
-      if (!user || user.role !== "Volunteer") {
-        return res
-          .status(400)
-          .json({ error: "Volunteer not found or invalid role" });
-      }
-
-      // Assign volunteer
-      donationBox.volunteer = volunteer;
-    }
-
-    // ✅ Update status
-    donationBox.boxStatus = status;
-
-    // ✅ Set the corresponding timestamp in timeTrack
-    donationBox.timeTrack[status] = new Date();
-
-    await donationBox.save();
-    res.json(donationBox);
+    box.volunteer = volunteerId;
+    box.boxStatus = "Picked";
+    box.timeTrack.Picked = Date.now();
+    await box.save();
+    res.json(box);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Failed to assign volunteer:", error.message);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
@@ -211,13 +192,11 @@ exports.changeQuantity = async (req, res) => {
     const oldTotal = item.quantity * item.product.price;
     const newTotal = quantity * item.product.price;
 
-    let newquantity = item.quantity + quantity;
-    if (newquantity <= 0) {
+    if (quantity <= 0) {
       return res.status(400).json({ error: "Quantity must be greater than 0" });
     }
 
-    item.quantity = newquantity;
-
+    item.quantity = quantity;
     box.price = box.price - oldTotal + newTotal;
 
     await box.save();
@@ -239,16 +218,30 @@ exports.getDonationBoxById = async (req, res) => {
   }
 };
 
+// controllers/donationBox.js
 exports.getAllDonationBoxes = async (req, res) => {
   try {
-    const boxes = await DonationBox.find()
+    const { volunteer } = req.query;
+    const query = {};
+
+    // ✅ Validate volunteer ID if present
+    if (volunteer) {
+      if (!mongoose.Types.ObjectId.isValid(volunteer)) {
+        return res.status(400).json({ error: "Invalid volunteer ID" });
+      }
+      query.volunteer = volunteer;
+    }
+
+    const boxes = await DonationBox.find(query)
       .populate("donor")
       .populate("volunteer")
       .populate("items.product")
       .select("boxStatus price region volunteer donor items timeTrack");
+
     res.json(boxes);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Server error:", error.message);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 };
 
@@ -278,17 +271,95 @@ exports.getDonationChartData = async (req, res) => {
   }
 };
 
-exports.deleteDonationBox = async (req, res) => {
+exports.removeVolunteer = async (req, res) => {
   try {
-    const { id } = req.params;
-    const deletedBox = await DonationBox.findByIdAndDelete(id);
+    const box = await DonationBox.findById(req.params.id);
+    if (!box) return res.status(404).json({ error: "Donation box not found" });
 
-    if (!deletedBox) {
-      return res.status(404).json({ message: "Donation box not found" });
+    // ✅ Clear volunteer and update status
+    box.volunteer = null;
+    box.boxStatus = "Checkout";
+
+    await box.save();
+    res.json(box); // ✅ Always return JSON
+  } catch (error) {
+    console.error("Failed to remove volunteer:", error.message);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.updateStatus = async (req, res) => {
+  try {
+    const { status, volunteer } = req.body;
+    const validStatuses = [
+      "Collecting",
+      "Checkout",
+      "Picked",
+      "Distributed",
+      "Cancelled",
+    ];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
     }
 
-    res.status(200).json({ message: "Donation box deleted successfully" });
+    const donationBox = await DonationBox.findById(req.params.id);
+    if (!donationBox) {
+      return res.status(404).json({ error: "Donation box not found" });
+    }
+
+    // ✅ Allow cancellation without volunteer/region checks
+    if (status === "Cancelled") {
+      donationBox.boxStatus = status;
+      donationBox.timeTrack.Cancelled = new Date();
+      await donationBox.save();
+      return res.json(donationBox);
+    }
+
+    // ✅ Handle other status updates (Checkout, Picked, Distributed)
+    switch (status) {
+      case "Checkout":
+        // ✅ Allow transition from Collecting to Checkout
+        if (donationBox.boxStatus !== "Collecting") {
+          return res.status(400).json({ error: "Invalid status transition" });
+        }
+        donationBox.boxStatus = status;
+        donationBox.timeTrack.Checkout = new Date();
+        break;
+
+      case "Picked":
+        // ✅ Require volunteer before picking
+        donationBox.volunteer = volunteer;
+        console.log(donationBox.volunteer.toHexString());
+
+        if (!donationBox.volunteer) {
+          return res
+            .status(400)
+            .json({ error: "Volunteer is required for Picked status" });
+        }
+        donationBox.boxStatus = status;
+        donationBox.timeTrack.Picked = new Date();
+        break;
+
+      case "Distributed":
+        // ✅ Require region before distribution
+        if (!donationBox.region) {
+          return res
+            .status(400)
+            .json({ error: "Region is required for Distribution" });
+        }
+        donationBox.boxStatus = status;
+        donationBox.timeTrack.Distributed = new Date();
+        break;
+
+      default:
+        return res.status(400).json({ error: "Status update not supported" });
+    }
+
+    await donationBox.save();
+    res.json(donationBox);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Status update failed:", error.message);
+    res.status(500).json({ error: "Server error" });
   }
 };

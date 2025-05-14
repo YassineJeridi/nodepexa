@@ -56,14 +56,9 @@ const userSchema = new mongoose.Schema({
     default: 0,
   },
 
-
-    requestedAssociation: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Association",
-      required: function () {
-        return this.volunteerRequest?.status === "pending";
-      },
-
+  requestedAssociation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Association",
   },
 
   badge: {
