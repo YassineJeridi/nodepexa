@@ -18,6 +18,10 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  QttReserver : {
+    type: Number,
+    default: 0
+  },
   image: {
     type: String, // Path to the image file
     required: true,

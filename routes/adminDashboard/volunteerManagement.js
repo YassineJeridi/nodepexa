@@ -9,6 +9,7 @@ const {
   rejectVolunteer,
   getApprovalRequests,
   getAllAssociations,
+  addVolunteer
 } = require("../../controllers/AdminDashboard/volunteerManagement");
 
 // ✅ Use proper route paths with leading slash
@@ -21,5 +22,7 @@ router.get("/approvalRequests", getApprovalRequests);
 
 router.post("/approveVolunteer/:id", approveVolunteer);
 router.post("/rejectVolunteer/:id", rejectVolunteer); 
+
+router.post("/addVolunteer/:id", addVolunteer);
 
 module.exports = router;

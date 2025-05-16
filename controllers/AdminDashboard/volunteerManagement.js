@@ -159,3 +159,42 @@ exports.getAllAssociations = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+// Add this to your existing controller file
+exports.addVolunteer = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const { associatedAssociation, badge } = req.body;
+
+    // ✅ Validate association exists
+    if (associatedAssociation) {
+      const associationExists = await mongoose
+        .model("Association")
+        .findById(associatedAssociation);
+      if (!associationExists) {
+        return res.status(400).json({ error: "Invalid association ID" });
+      }
+    }
+
+    // ✅ Update user fields
+    user.role = "Volunteer";
+    user.associatedAssociation =
+      associatedAssociation || user.associatedAssociation;
+    user.badge = badge || "Iron";
+    user.approvals = {
+      ...user.approvals,
+      admin: true,
+    };
+
+    await user.save();
+
+    res.json(user);
+  } catch (error) {
+    console.error("Failed to add volunteer:", error.message);
+    res.status(500).json({ error: "Server error" });
+  }
+};
