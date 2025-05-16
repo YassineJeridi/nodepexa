@@ -55,10 +55,23 @@ const userSchema = new mongoose.Schema({
     },
     default: 0,
   },
-
-  requestedAssociation: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Association",
+  approvals: {
+    association: {
+      type: Boolean,
+      required: function () {
+        return (
+          this.role !== "Anonymous" &&
+          this.role !== "Admin" &&
+          this.associatedAssociation
+        );
+      },
+    },
+    admin: {
+      type: Boolean,
+      required: function () {
+        return this.associationApprovement;
+      },
+    },
   },
 
   badge: {
@@ -71,9 +84,6 @@ const userSchema = new mongoose.Schema({
   associatedAssociation: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Association",
-    required: function () {
-      return this.role === "Volunteer";
-    },
   },
   userStatus: {
     type: String,

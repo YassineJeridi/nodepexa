@@ -11,6 +11,7 @@ const ticketRoutes = require("./routes/Ticket");
 const userRoutes = require("./routes/User");
 const dashboardRouter = require("./routes/adminDashboard/AdminDashboardRouter");
 const usersManagementRouter = require("./routes/AdminDashboard/UsersManagementRoute");
+const volunteerRouter = require("./routes/AdminDashboard/volunteerManagement");
 
 const statsRoutes = require("./routes/AdminDashboard/stats.js"); // Import stats routes
 
@@ -36,6 +37,7 @@ app.use("/api", statsRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/admin/dashboard", dashboardRouter);
 app.use("/api/admin/users", usersManagementRouter);
+app.use("/api/volunteerManagement", volunteerRouter);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
