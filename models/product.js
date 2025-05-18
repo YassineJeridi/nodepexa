@@ -1,10 +1,9 @@
 const mongoose = require("mongoose");
 
-const productSchema = new mongoose.Schema({
+const ProductSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true, // Ensures product name is unique in the database
   },
   description: {
     type: String,
@@ -13,21 +12,19 @@ const productSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: true,
-  },
-  quantity: {
-    type: Number,
-    required: true,
-  },
-  QttReserver : {
-    type: Number,
-    default: 0
+    min: 0,
   },
   image: {
-    type: String, // Path to the image file
+    type: String, // Store image URL or file path
     required: true,
   },
+
+  stocks: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Stock",
+    },
+  ],
 });
 
-// Create index for unique constraint
-
-module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.model("Product", ProductSchema);

@@ -8,7 +8,6 @@ exports.createTicket = async (req, res) => {
     if (ticketData.type === "support") {
       // Check if email is provided
 
-
       if (!ticketData.email) {
         return res
           .status(400)
@@ -48,7 +47,9 @@ exports.getTicketsByType = async (req, res) => {
 
 exports.getTicketsByEmail = async (req, res) => {
   try {
-    const tickets = await Ticket.find({ email: req.params.email });
+    const tickets = await Ticket.find({
+      email: { $regex: req.params.email, $options: "i" }, // 'i' = case-insensitive
+    });
     res.json(tickets);
   } catch (error) {
     res.status(500).json({ error: "Server error" });

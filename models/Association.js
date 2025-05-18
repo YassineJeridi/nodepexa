@@ -6,31 +6,34 @@ const associationSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  password: {
-    type: String,
-    required: true,
-  },
   email: {
     type: String,
     unique: true,
+    required: true,
+    sparse: true,
+  },
+  password: {
+    type: String,
     required: true,
   },
   phone: {
     type: String,
     required: true,
     unique: true,
+    sparse: true,
   },
-
   address: {
     type: String,
   },
   description: String,
-  location: String,
   partnershipDate: {
     type: Date,
-    default: Date.now, // Auto-set partnership date
+    default: Date.now,
   },
-  partnershipDoc: String,
+  partnershipDoc: {
+    type: String,
+    required: true,
+  },
 });
 
 // Password hashing for associations
