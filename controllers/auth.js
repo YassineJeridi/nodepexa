@@ -1,17 +1,16 @@
+//controllers/auth.js
 const User = require("../models/User");
 const Association = require("../models/Association");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
+const { log } = require("console");
 
 exports.register = async (req, res) => {
   try {
     const userData = req.body;
 
     // Validate donor request to become a volunteer (if applicable)
-    if (
-      userData.role === "Donor" &&
-      userData.requestedAssociation
-    ) {
+    if (userData.role === "Donor" && userData.requestedAssociation) {
       const associationExists = await Association.exists({
         _id: userData.requestedAssociation,
       });
@@ -229,10 +228,11 @@ exports.associationLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: association._id, role: "Association" },
+      { AssociationId: association._id, role: "Association" },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
+    console.log(token);
 
     res.status(200).json({
       message: "Login successful",

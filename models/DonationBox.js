@@ -1,4 +1,6 @@
+//models/DonationBox.js
 const mongoose = require("mongoose");
+
 
 const donationBoxSchema = new mongoose.Schema({
   items: [
@@ -8,7 +10,11 @@ const donationBoxSchema = new mongoose.Schema({
     },
   ],
   region: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Region",
+    required: function () {
+      return this.boxStatus !== "Collecting";
+    },
   },
   price: {
     type: Number,

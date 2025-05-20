@@ -1,3 +1,4 @@
+// models/Association.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
@@ -25,6 +26,11 @@ const associationSchema = new mongoose.Schema({
   address: {
     type: String,
   },
+  region: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Region",
+    required: true,
+  },
   description: String,
   partnershipDate: {
     type: Date,
@@ -47,4 +53,6 @@ associationSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model("Association", associationSchema);
+module.exports =
+  mongoose.models.Association ||
+  mongoose.model("Association", associationSchema);

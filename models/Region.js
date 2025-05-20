@@ -6,7 +6,7 @@ const RegionSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  // Relationship: Region 0..N — 0..N Stock
+
   stocks: [
     {
       type: mongoose.Schema.Types.ObjectId,

@@ -9,9 +9,12 @@ const donationBoxRoutes = require("./routes/DonationBox");
 const productRoutes = require("./routes/Product");
 const ticketRoutes = require("./routes/Ticket");
 const userRoutes = require("./routes/User");
-const dashboardRouter = require("./routes/adminDashboard/AdminDashboardRouter");
+const dashboardRouter = require("./routes/AdminDashboard/AdminDashboardRouter");
 const usersManagementRouter = require("./routes/AdminDashboard/UsersManagementRoute");
 const volunteerRouter = require("./routes/AdminDashboard/volunteerManagement");
+const associationVolunteersRouter = require("./routes/associationDashboard/Volunteer");
+
+const associationStatsRoutes = require("./routes/associationDashboard/stats");
 
 const statsRoutes = require("./routes/AdminDashboard/stats.js"); // Import stats routes
 
@@ -38,7 +41,8 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/admin/dashboard", dashboardRouter);
 app.use("/api/admin/users", usersManagementRouter);
 app.use("/api/volunteerManagement", volunteerRouter);
-
+app.use("/api/association", associationVolunteersRouter);
+app.use("/api/association", associationStatsRoutes);
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

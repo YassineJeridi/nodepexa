@@ -37,4 +37,4 @@ export const getStats = async (req, res) => {
   }
 };
 
-export default { getStats }; 
+export default { getStats };
