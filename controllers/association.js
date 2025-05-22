@@ -26,16 +26,27 @@ exports.getAssociationById = async (req, res) => {
   }
 };
 // Update association
+// Update association (fix for password hashing)
 exports.updateAssociation = async (req, res) => {
   try {
-    const association = await Association.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const association = await Association.findById(req.params.id);
     if (!association)
       return res.status(404).json({ error: "Association not found" });
-    res.json(association);
+
+    // Update fields
+    if (req.body.name) association.name = req.body.name;
+    if (req.body.email) association.email = req.body.email;
+    if (req.body.phone) association.phone = req.body.phone;
+    if (req.body.address !== undefined) association.address = req.body.address;
+    if (req.body.password) association.password = req.body.password; // Will be hashed by pre-save
+
+    await association.save(); // Triggers pre-save hook
+
+    // Remove password from response
+    const updated = association.toObject();
+    delete updated.password;
+
+    res.json(updated);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

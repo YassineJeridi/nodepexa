@@ -55,7 +55,7 @@ const userSchema = new mongoose.Schema({
       return this.role !== "Anonymous" && this.role !== "Admin";
     },
     default: 0,
-  },
+  },  
   approvals: {
     association: {
       type: Boolean,

@@ -13,10 +13,9 @@ const dashboardRouter = require("./routes/AdminDashboard/AdminDashboardRouter");
 const usersManagementRouter = require("./routes/AdminDashboard/UsersManagementRoute");
 const volunteerRouter = require("./routes/AdminDashboard/volunteerManagement");
 const associationVolunteersRouter = require("./routes/associationDashboard/Volunteer");
-
 const associationStatsRoutes = require("./routes/associationDashboard/stats");
-
 const statsRoutes = require("./routes/AdminDashboard/stats.js"); // Import stats routes
+const associationDashboardBoxRoutes = require("./routes/associationDashboard/box");
 
 const app = express();
 
@@ -43,6 +42,7 @@ app.use("/api/admin/users", usersManagementRouter);
 app.use("/api/volunteerManagement", volunteerRouter);
 app.use("/api/association", associationVolunteersRouter);
 app.use("/api/association", associationStatsRoutes);
+app.use("/api/associationDashboard", associationDashboardBoxRoutes);
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
