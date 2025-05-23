@@ -365,3 +365,21 @@ exports.updateStatus = async (req, res) => {
 };
 
 
+
+// GET /api/userdashboard/:userId/donations
+exports.getUserDonations = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+    // Find all donation boxes where donor matches userId
+    const donations = await DonationBox.find({ donor: userId })
+      .populate("items.product")
+      .populate("region");
+    res.json(donations);
+  } catch (error) {
+    console.error("Error fetching user donations:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};

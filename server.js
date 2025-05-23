@@ -9,6 +9,7 @@ const donationBoxRoutes = require("./routes/DonationBox");
 const productRoutes = require("./routes/Product");
 const ticketRoutes = require("./routes/Ticket");
 const userRoutes = require("./routes/User");
+const UserDashboard = require("./routes/UserDashboard/UserDashboard");
 const dashboardRouter = require("./routes/AdminDashboard/AdminDashboardRouter");
 const usersManagementRouter = require("./routes/AdminDashboard/UsersManagementRoute");
 const volunteerRouter = require("./routes/AdminDashboard/volunteerManagement");
@@ -43,6 +44,7 @@ app.use("/api/volunteerManagement", volunteerRouter);
 app.use("/api/association", associationVolunteersRouter);
 app.use("/api/association", associationStatsRoutes);
 app.use("/api/associationDashboard", associationDashboardBoxRoutes);
+app.use("/api/users", UserDashboard);
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

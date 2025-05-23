@@ -5,6 +5,7 @@ const {
   getUserByPhone,
   updateUser,
   deleteUser,
+  getUserById,
 } = require("../controllers/user");
 
 router.get("/", getAllUsers);
@@ -13,14 +14,3 @@ router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 
 module.exports = router;
-
-/* 
-//Add authorization checks for admin-only operations
-
-
-const { verifyToken, isAdmin } = require('../middleware/auth');
-
-router.get('/', verifyToken, isAdmin, getAllUsers);
-router.delete('/:id', verifyToken, isAdmin, deleteUser);
-
-*/

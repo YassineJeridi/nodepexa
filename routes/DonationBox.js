@@ -9,6 +9,7 @@ const {
   changeQuantity,
   updateStatus,
   getDonationBoxById,
+  getUserDonations,
   getAllDonationBoxes,
   getDonationChartData,
   removeVolunteer,
@@ -20,7 +21,7 @@ const {
 router.post("/", createDonationBox);
 router.patch("/region/:id", addRegion);
 router.post("/items/:id", addItem);
-
+router.get("/:userId/donations", getUserDonations);
 router.delete("/items/:id", removeItem);
 router.patch("/items/:id", changeQuantity);
 router.patch("/status/:id", updateStatus);
@@ -29,6 +30,5 @@ router.get("/chart", getDonationChartData);
 router.get("/:id", getDonationBoxById);
 router.patch("/:id/volunteer", assignVolunteer);
 router.patch("/removeVolunteer/:id", removeVolunteer);
-
 
 module.exports = router;
