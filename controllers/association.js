@@ -5,13 +5,13 @@ const path = require("path");
 
 exports.getAssociations = async (req, res) => {
   try {
-    const associations = await Association.find();
+    // Populate region to get { _id, name }
+    const associations = await Association.find().populate("region");
     res.json(associations);
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
 };
-
 // Get association by ID
 
 exports.getAssociationById = async (req, res) => {

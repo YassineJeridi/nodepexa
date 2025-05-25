@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   getUserById,
   getUserDonations,
+  getRegions,
 } = require("../../controllers/UserDashboard/UserDashboard");
 
 // Get user by ID
