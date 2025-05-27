@@ -13,6 +13,7 @@ const {
   getAllDonationBoxes,
   getDonationChartData,
   removeVolunteer,
+  getCollectingBoxByUserId,
 
   assignVolunteer,
 } = require("../controllers/donationBox");
@@ -30,5 +31,6 @@ router.get("/chart", getDonationChartData);
 router.get("/:id", getDonationBoxById);
 router.patch("/:id/volunteer", assignVolunteer);
 router.patch("/removeVolunteer/:id", removeVolunteer);
+router.get("/user/:userId/collecting", getCollectingBoxByUserId);
 
 module.exports = router;
