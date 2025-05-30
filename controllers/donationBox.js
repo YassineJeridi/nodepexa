@@ -37,7 +37,14 @@ exports.createDonationBox = async (req, res) => {
     // Validate donor
     if (!donor) return res.status(400).json({ error: "Donor is required" });
     const user = await User.findById(donor);
-    if (!user) return res.status(404).json({ error: "Donor not found" });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // ✅ Allow both Donors and Volunteers to create boxes
+    if (user.role !== "Donor" && user.role !== "Volunteer") {
+      return res.status(403).json({
+        error: "Only donors and volunteers can create a donation box",
+      });
+    }
 
     // Check for existing "Collecting" box
     const existingBox = await DonationBox.findOne({
@@ -184,7 +191,7 @@ exports.removeItem = async (req, res) => {
         (sum, item) => sum + (item.product.price || 0) * (item.quantity || 0),
         0
       );
-     
+
       box.price = Math.max(0, Math.round(box.price * 100) / 100);
     }
 
@@ -229,6 +236,7 @@ exports.getDonationBoxById = async (req, res) => {
   try {
     const box = await DonationBox.findById(req.params.id)
       .populate("donor")
+      .populate("volunteer")
       .populate("items.product");
     if (!box) return res.status(404).json({ error: "Donation box not found" });
     res.json(box);
@@ -413,6 +421,60 @@ exports.getCollectingBoxByUserId = async (req, res) => {
 
     if (!box) return res.status(404).json(null);
     res.json(box);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.createAnonymousOrder = async (req, res) => {
+  try {
+    const { items, region } = req.body;
+    const userId = req.params.userId;
+
+    // Validate
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "No items provided" });
+    }
+    if (!region) {
+      return res.status(400).json({ error: "Region is required" });
+    }
+
+    // Validate anonymous user
+    const user = await User.findById(userId);
+    if (!user || user.role !== "Anonymous") {
+      return res.status(400).json({ error: "Anonymous user not found" });
+    }
+
+    // Validate products and calculate total price
+    let totalPrice = 0;
+    for (const item of items) {
+      const product = await Product.findById(item.product);
+      if (!product) {
+        return res
+          .status(400)
+          .json({ error: `Product not found: ${item.product}` });
+      }
+      const quantity = item.quantity || 1;
+      totalPrice += product.price * quantity;
+    }
+
+    // Create donation box
+    const donationBox = await DonationBox.create({
+      donor: userId,
+      items: items.map((item) => ({
+        product: item.product,
+        quantity: item.quantity,
+      })),
+      region,
+      price: totalPrice,
+      boxStatus: "Checkout",
+      timeTrack: { Checkout: new Date() },
+    });
+
+    await donationBox.populate("items.product");
+    await donationBox.populate("region");
+
+    res.status(201).json(donationBox);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

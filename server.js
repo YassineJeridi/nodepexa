@@ -20,6 +20,8 @@ const associationDashboardBoxRoutes = require("./routes/associationDashboard/box
 const mainRoutes = require("./routes/mainRoutes");
 const regionRoutes = require("./routes/regionRoutes");
 
+
+
 const app = express();
 
 const corsOptions = {
@@ -49,6 +51,7 @@ app.use("/api/associationDashboard", associationDashboardBoxRoutes);
 app.use("/api/users", UserDashboard);
 app.use("/api", mainRoutes);
 app.use("/api/regions", regionRoutes);
+app.use("/api/donationBoxes", donationBoxRoutes);
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
