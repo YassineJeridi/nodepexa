@@ -14,7 +14,6 @@ const {
   getDonationChartData,
   removeVolunteer,
   getCollectingBoxByUserId,
-
   assignVolunteer,
   createAnonymousOrder,
 } = require("../controllers/donationBox");

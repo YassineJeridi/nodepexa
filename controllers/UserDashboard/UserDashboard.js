@@ -28,3 +28,41 @@ exports.getUserDonations = async (req, res) => {
   }
 };
 
+// Get all boxes for a user, with special filtering for "Distributed" status
+exports.getUserBoxesWithStatusFilter = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    // Calculate 2 days ago
+    const now = new Date();
+    const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+
+    // Build the query for status "Checkout" or "Picked"
+    const statusQuery = {
+      $or: [{ boxStatus: "Checkout" }, { boxStatus: "Picked" }],
+    };
+
+    // Build the query for status "Distributed" and timeTrack.Distributed >= twoDaysAgo
+    const distributedQuery = {
+      boxStatus: "Distributed",
+      "timeTrack.Distributed": { $gte: twoDaysAgo },
+    };
+
+    // Combine both queries
+    const query = {
+      donor: userId,
+      $or: [statusQuery, distributedQuery],
+    };
+
+    const boxes = await DonationBox.find(query)
+      .populate("items.product")
+      .populate("region");
+
+    res.json(boxes);
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+};

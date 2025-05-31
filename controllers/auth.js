@@ -112,15 +112,18 @@ exports.login = async (req, res) => {
     }
 
     // 3. Generate token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     // 4. Send response
     res.json({
       token,
       userId: user._id,
-      role: user.role, // Include role if needed for frontend
     });
   } catch (error) {
     console.error("Login error:", error);

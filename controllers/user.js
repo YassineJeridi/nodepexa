@@ -1,5 +1,7 @@
 const User = require("../models/User");
 
+const bcrypt = require("bcryptjs");
+
 // Get all users (admin only)
 exports.getAllUsers = async (req, res) => {
   try {
@@ -46,3 +48,28 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
+exports.updateUserPassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if old password matches
+    const isMatch = await user.matchPassword(oldPassword);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Old password is incorrect" });
+    }
+
+    // **Important:** Do not hash the password here—just set it.
+    // The pre-save hook will hash it when you call save().
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

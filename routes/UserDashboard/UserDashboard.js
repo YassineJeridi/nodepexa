@@ -1,16 +1,18 @@
+
 const express = require("express");
 const router = express.Router();
 
 const {
   getUserById,
   getUserDonations,
-  getRegions,
+
+  getUserBoxesWithStatusFilter,
 } = require("../../controllers/UserDashboard/UserDashboard");
 
-// Get user by ID
 router.get("/:id", getUserById);
-
-// Get all donations for a user
 router.get("/:id/donations", getUserDonations);
-
+router.get(
+  "/:userId/withStatusFilter",
+  getUserBoxesWithStatusFilter
+);
 module.exports = router;
